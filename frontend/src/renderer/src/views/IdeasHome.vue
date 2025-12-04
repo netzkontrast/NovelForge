@@ -14,7 +14,7 @@ const cardStore = useCardStore()
 const { cardTree } = storeToRefs(cardStore)
 
 onMounted(async () => {
-  // 若未加载或不是保留项目，则加载保留项目
+  // If not loaded or not reserved project, load reserved project
   if (!currentProject.value || (currentProject.value.name || '') !== '__free__') {
     await projectStore.loadFreeProject()
   }
@@ -24,7 +24,7 @@ onMounted(async () => {
   }
 })
 
-// 新建自由卡对话框
+// Create Free Card Dialog
 const createDialog = ref(false)
 const newTitle = ref('')
 const newTypeId = ref<number | null>(null)
@@ -46,7 +46,7 @@ async function confirmCreate() {
   createDialog.value = false
 }
 
-// --- 移动/复制到项目 ---
+// --- Move/Copy to Project ---
 const transferDialog = ref(false)
 const transferOp = ref<'copy' | 'move'>('copy')
 const transferSearch = ref('')
@@ -69,7 +69,7 @@ async function openTransferDialog() {
   targetProjectId.value = null
   targetParentId.value = null
   targetProjectCards.value = []
-  // 加载项目列表（排除 __free__）
+  // Load project list (exclude __free__)
   try {
     const list = await getProjects()
     projectOptions.value = (list || []).filter(p => (p.name || '') !== '__free__').map(p => ({ id: p.id!, name: p.name! }))
@@ -96,7 +96,7 @@ async function confirmTransfer() {
         await moveCard(id, { target_project_id: pid, parent_id: targetParentId.value as any })
       }
     }
-    // 刷新自由项目卡片
+    // Refresh free project cards
     if (projectStore.currentProject?.id) await cardStore.fetchCards(projectStore.currentProject.id)
     transferDialog.value = false
   } catch {}
@@ -107,7 +107,7 @@ async function confirmTransfer() {
   <div class="ideas-home">
     <div class="topbar" v-if="currentProject">
       <div class="left">
-        <el-button size="small" @click="openTransferDialog">移动/复制到项目</el-button>
+        <el-button size="small" @click="openTransferDialog">Move/Copy to Project</el-button>
       </div>
       <div class="right"></div>
     </div>
@@ -120,31 +120,31 @@ async function confirmTransfer() {
 
     
 
-    <el-dialog v-model="transferDialog" title="移动/复制到项目" width="760px" class="nf-transfer-dialog">
+    <el-dialog v-model="transferDialog" title="Move/Copy to Project" width="760px" class="nf-transfer-dialog">
       <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
         <el-radio-group v-model="transferOp" size="small">
-          <el-radio-button label="copy">复制</el-radio-button>
-          <el-radio-button label="move">移动</el-radio-button>
+          <el-radio-button label="copy">Copy</el-radio-button>
+          <el-radio-button label="move">Move</el-radio-button>
         </el-radio-group>
-        <el-select v-model="targetProjectId" placeholder="目标项目" style="width: 240px" @change="onTargetProjectChange($event as any)">
+        <el-select v-model="targetProjectId" placeholder="Target Project" style="width: 240px" @change="onTargetProjectChange($event as any)">
           <el-option v-for="p in projectOptions" :key="p.id" :label="p.name" :value="p.id" />
         </el-select>
-        <el-tree-select v-model="targetParentId" :data="targetProjectCards" :props="treeSelectProps" check-strictly clearable :render-after-expand="false" placeholder="目标父级（可选）" style="width: 280px" />
-        <el-input v-model="transferSearch" placeholder="搜索自由卡标题..." clearable style="flex:1" />
+        <el-tree-select v-model="targetParentId" :data="targetProjectCards" :props="treeSelectProps" check-strictly clearable :render-after-expand="false" placeholder="Target Parent (Optional)" style="width: 280px" />
+        <el-input v-model="transferSearch" placeholder="Search free card title..." clearable style="flex:1" />
       </div>
       <el-table :data="filteredFreeCards" height="360px" border @selection-change="(rows:any[])=>selectedIds = rows.map(r=>r.id)">
         <el-table-column type="selection" width="48" />
-        <el-table-column prop="title" label="标题" min-width="220" />
-        <el-table-column label="类型" min-width="160">
+        <el-table-column prop="title" label="Title" min-width="220" />
+        <el-table-column label="Type" min-width="160">
           <template #default="{ row }">{{ row.card_type?.name }}</template>
         </el-table-column>
-        <el-table-column label="创建时间" min-width="180">
+        <el-table-column label="Created At" min-width="180">
           <template #default="{ row }">{{ (row as any).created_at }}</template>
         </el-table-column>
       </el-table>
       <template #footer>
-        <el-button @click="transferDialog = false">取消</el-button>
-        <el-button type="primary" :disabled="!selectedIds.length || !targetProjectId" @click="confirmTransfer">确定</el-button>
+        <el-button @click="transferDialog = false">Cancel</el-button>
+        <el-button type="primary" :disabled="!selectedIds.length || !targetProjectId" @click="confirmTransfer">Confirm</el-button>
       </template>
     </el-dialog>
   </div>

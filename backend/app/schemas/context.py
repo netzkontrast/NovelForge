@@ -6,26 +6,26 @@ from app.schemas.relation_extract import RelationItem
 
 
 class AssembleContextRequest(BaseModel):
-	project_id: Optional[int] = Field(default=None, description="项目ID")
-	volume_number: Optional[int] = Field(default=None, description="卷号")
-	chapter_number: Optional[int] = Field(default=None, description="章节号")
-	chapter_id: Optional[int] = Field(default=None, description="章节卡片ID（可选）")
-	participants: Optional[List[str]] = Field(default=None, description="参与实体名称列表")
-	current_draft_tail: Optional[str] = Field(default=None, description="上下文模板（草稿尾部）")
-	recent_chapters_window: Optional[int] = Field(default=None, description="最近窗口N（保留，为将来扩展）")
+	project_id: Optional[int] = Field(default=None, description="Project ID")
+	volume_number: Optional[int] = Field(default=None, description="Volume Number")
+	chapter_number: Optional[int] = Field(default=None, description="Chapter Number")
+	chapter_id: Optional[int] = Field(default=None, description="Chapter Card ID (Optional)")
+	participants: Optional[List[str]] = Field(default=None, description="List of participant entity names")
+	current_draft_tail: Optional[str] = Field(default=None, description="Context template (draft tail)")
+	recent_chapters_window: Optional[int] = Field(default=None, description="Recent window N (Reserved for future extension)")
 
 
 class FactsStructured(BaseModel):
-	# 只保留当前确实使用的字段
-	fact_summaries: List[str] = Field(default_factory=list, description="关键事实摘要")
-	relation_summaries: List[RelationItem] = Field(default_factory=list, description="关系摘要（含近期对话/事件）")
+	# Only keep fields currently used
+	fact_summaries: List[str] = Field(default_factory=list, description="Key fact summaries")
+	relation_summaries: List[RelationItem] = Field(default_factory=list, description="Relation summaries (including recent dialogues/events)")
 
 
 class AssembleContextResponse(BaseModel):
-	# 仅保留事实子图及预算信息
-	facts_subgraph: str = Field(default="", description="事实子图的文本回显（可选，仅回显）")
-	budget_stats: Dict[str, Any] = Field(default_factory=dict, description="上下文字数预算统计（可能包含嵌套 parts dict）")
-	facts_structured: Optional[FactsStructured] = Field(default=None, description="结构化事实子图")
+	# Only keep fact subgraph and budget info
+	facts_subgraph: str = Field(default="", description="Fact subgraph text echo (Optional, echo only)")
+	budget_stats: Dict[str, Any] = Field(default_factory=dict, description="Context word count budget stats (may include nested parts dict)")
+	facts_structured: Optional[FactsStructured] = Field(default=None, description="Structured fact subgraph")
 
 
 class ContextSettingsModel(BaseModel):

@@ -10,7 +10,7 @@ const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean]; 'close': [] }>()
 
 const activeTab = ref('llm')
-// 读取全局 store 预设的初始 tab
+// Read global store preset initial tab
 import { useAppStore } from '@renderer/stores/useAppStore'
 const appStore = useAppStore()
 activeTab.value = appStore.settingsInitialTab || 'llm'
@@ -20,7 +20,7 @@ function handleClose() {
   emit('close')
 }
 
-// 当切到 LLM 标签或首次显示时，让子组件刷新
+// Refresh child component when switch to LLM tab or first show
 import { onMounted, watch, nextTick } from 'vue'
 const llmManagerRef = ref()
 function emitRefreshIfLLM() {
@@ -30,7 +30,7 @@ function emitRefreshIfLLM() {
 }
 onMounted(() => emitRefreshIfLLM())
 watch(() => activeTab.value, () => emitRefreshIfLLM())
-// 对话框每次打开也刷新一次（等待子组件渲染完成）
+// Refresh dialog every time open (wait for child render)
 watch(() => props.modelValue, async (open) => { if (open) { await nextTick(); emitRefreshIfLLM() } })
 </script>
 
@@ -38,26 +38,26 @@ watch(() => props.modelValue, async (open) => { if (open) { await nextTick(); em
   <el-dialog 
     :model-value="modelValue" 
     @update:model-value="(val) => emit('update:modelValue', val)"
-    title="应用设置" 
+    title="Application Settings"
     width="85%" 
     top="4vh"
     @close="handleClose"
   >
     <div class="settings-container">
       <el-tabs v-model="activeTab" tab-position="left" class="settings-tabs">
-        <el-tab-pane label="LLM 配置" name="llm">
+        <el-tab-pane label="LLM Config" name="llm">
           <LLMConfigManager ref="llmManagerRef" />
         </el-tab-pane>
-        <el-tab-pane label="知识库" name="knowledge">
+        <el-tab-pane label="Knowledge Base" name="knowledge">
           <KnowledgeManager />
         </el-tab-pane>
-        <el-tab-pane label="提示词工坊" name="prompts">
+        <el-tab-pane label="Prompt Workshop" name="prompts">
           <PromptWorkshop />
         </el-tab-pane>
-        <el-tab-pane label="卡片类型" name="card-types">
+        <el-tab-pane label="Card Types" name="card-types">
           <CardTypeManager />
         </el-tab-pane>
-        <!-- <el-tab-pane label="关于" name="about">
+        <!-- <el-tab-pane label="About" name="about">
           <Versions />
         </el-tab-pane> -->
       </el-tabs>
@@ -70,4 +70,4 @@ watch(() => props.modelValue, async (open) => { if (open) { await nextTick(); em
 .settings-tabs { height: 100%; }
 :deep(.el-dialog__body) { padding-top: 8px; }
 :deep(.el-tabs__content) { height: 100%; overflow-y: auto; }
-</style> 
+</style>

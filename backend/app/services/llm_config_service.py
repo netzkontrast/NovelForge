@@ -4,7 +4,7 @@ from app.db.models import LLMConfig
 from app.schemas.llm_config import LLMConfigCreate, LLMConfigUpdate
 
 def create_llm_config(session: Session, config_in: LLMConfigCreate) -> LLMConfig:
-    # 现在直接使用 config_in 创建模型，它会包含 api_key
+    # Now use config_in directly to create model, it includes api_key
     db_config = LLMConfig.model_validate(config_in)
     
     session.add(db_config)
@@ -23,7 +23,7 @@ def update_llm_config(session: Session, config_id: int, config_in: LLMConfigUpda
     if not db_config:
         return None
     
-    # 直接更新数据，不再排除 api_key
+    # Update data directly, no longer exclude api_key
     update_data = config_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_config, key, value)
@@ -46,16 +46,16 @@ def delete_llm_config(session: Session, config_id: int) -> bool:
 def can_consume(session: Session, config_id: int, need_input_tokens: int, need_output_tokens: int = 0, need_calls: int = 1) -> tuple[bool, str]:
     cfg = session.get(LLMConfig, config_id)
     if not cfg:
-        return False, "LLM 配置不存在"
-    # token 限额（-1 不限）
+        return False, "LLM Config not found"
+    # Token limit (-1 unlimited)
     total_need = max(0, need_input_tokens) + max(0, need_output_tokens)
     if cfg.token_limit is not None and cfg.token_limit >= 0:
         if (cfg.used_tokens_input + cfg.used_tokens_output + total_need) > cfg.token_limit:
-            return False, "已超出 Token 上限"
-    # 调用次数
+            return False, "Token limit exceeded"
+    # Call count
     if cfg.call_limit is not None and cfg.call_limit >= 0:
         if (cfg.used_calls + need_calls) > cfg.call_limit:
-            return False, "已超出调用次数上限"
+            return False, "Call limit exceeded"
     return True, "OK"
 
 
@@ -63,7 +63,7 @@ def accumulate_usage(session: Session, config_id: int, add_input_tokens: int, ad
     cfg = session.get(LLMConfig, config_id)
     if not cfg:
         return
-    # 任务无论正常或中止，调用计数加一（也可按需区分）
+    # Increment call count regardless of normal or aborted task (distinguish if needed)
     cfg.used_calls = (cfg.used_calls or 0) + max(0, add_calls)
     cfg.used_tokens_input = (cfg.used_tokens_input or 0) + max(0, add_input_tokens)
     cfg.used_tokens_output = (cfg.used_tokens_output or 0) + max(0, add_output_tokens)

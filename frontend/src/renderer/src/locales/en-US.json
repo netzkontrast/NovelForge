@@ -1,0 +1,9 @@
+{
+  "message": {
+    "hello": "Hello, World"
+  },
+  "project": {
+    "title": "Project Management",
+    "fetch_projects": "Fetch Projects"
+  }
+}

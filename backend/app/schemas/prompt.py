@@ -19,7 +19,7 @@ class PromptUpdate(SQLModel):
     description: Optional[str] = None
     template: Optional[str] = None
 
-# 知识库Schema
+# Knowledge Base Schema
 class KnowledgeBase(SQLModel):
     name: str
     description: Optional[str] = None

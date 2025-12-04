@@ -9,16 +9,16 @@ class CardTypeBase(BaseModel):
     name: str
     model_name: Optional[str] = None
     description: Optional[str] = None
-    # 类型内置结构（JSON Schema）
+    # Type built-in structure (JSON Schema)
     json_schema: Optional[Dict[str, Any]] = None
-    # 类型默认 AI 参数
+    # Type default AI parameters
     ai_params: Optional[Dict[str, Any]] = None
     editor_component: Optional[str] = None
     is_ai_enabled: bool = Field(default=False)
     is_singleton: bool = Field(default=False)
-    # 默认AI上下文注入模板（类型级别）
+    # Default AI context injection template (Type level)
     default_ai_context_template: Optional[str] = None
-    # UI 布局（可选）
+    # UI Layout (Optional)
     ui_layout: Optional[Dict[str, Any]] = None
 
 
@@ -52,9 +52,9 @@ class CardBase(BaseModel):
     content: Optional[Dict[str, Any]] = Field(default_factory=dict)
     parent_id: Optional[int] = None
     card_type_id: int
-    # 实例可选自定义结构；为空表示跟随类型
+    # Instance optional custom structure; empty means follow type
     json_schema: Optional[Dict[str, Any]] = None
-    # 实例 AI 参数；为空表示跟随类型
+    # Instance AI parameters; empty means follow type
     ai_params: Optional[Dict[str, Any]] = None
 
 
@@ -79,7 +79,7 @@ class CardRead(CardBase):
     created_at: datetime
     display_order: int
     card_type: CardTypeRead
-    # 具体卡片可覆盖类型默认模板
+    # Specific card can override type default template
     ai_context_template: Optional[str] = None
 
 
@@ -91,12 +91,12 @@ class CardCopyOrMoveRequest(BaseModel):
 
 
 class CardOrderItem(BaseModel):
-    """单个卡片的排序信息"""
+    """Sort information for a single card"""
     card_id: int
     display_order: int
     parent_id: Optional[int] = None
 
 
 class CardBatchReorderRequest(BaseModel):
-    """批量更新卡片排序请求"""
-    updates: List[CardOrderItem] = Field(description="要更新的卡片排序列表") 
+    """Batch update card ordering request"""
+    updates: List[CardOrderItem] = Field(description="List of card sortings to update")

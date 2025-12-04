@@ -1,20 +1,45 @@
 <template>
-  <el-drawer v-model="visible" :with-header="false" size="36%" append-to-body>
+  <el-drawer
+    v-model="visible"
+    title="Context Injection"
+    direction="rtl"
+    size="500px"
+  >
     <div class="drawer-wrapper">
-      <div class="drawer-header">
-        <h3>上下文注入</h3>
-        <el-button text @click="visible=false">关闭</el-button>
+      <slot name="params"></slot>
+      <div class="section">
+        <div class="drawer-header">
+          <span>Template (Supports @ referencing cards)</span>
+        </div>
+        <el-input
+          v-model="aiContext"
+          type="textarea"
+          :rows="10"
+          placeholder="e.g.: Word Setting: @WorldSetting.content"
+          class="context-area"
+        />
+        <div class="chips">
+          <el-tag v-for="t in tokens" :key="t" closable @close="removeToken(t)" size="small">@{{ t }}</el-tag>
+        </div>
       </div>
 
-      <div class="section">
-        <h4>上下文模板</h4>
-        <el-input v-model="aiContext" type="textarea" :rows="8" placeholder="在此编辑上下文模板，支持 @ 引用" class="context-area" :spellcheck="false" />
-        <div class="chips">
-          <el-tag v-for="(t, i) in tokens" :key="i" closable @close="removeToken(t)">@{{ t }}</el-tag>
+      <div class="section" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+        <div class="drawer-header">
+          <span>Live Preview</span>
         </div>
+        <el-input
+          type="textarea"
+          :model-value="previewText"
+          readonly
+          resize="none"
+          style="flex:1;"
+          input-style="height:100%;"
+        />
+      </div>
+
+      <div class="footer">
         <div class="actions">
-          <el-button size="small" @click="$emit('open-selector', aiContext)">插入引用 @</el-button>
-          <el-button size="small" type="primary" @click="apply">应用到卡片</el-button>
+          <el-button type="primary" @click="apply">Apply to Card</el-button>
         </div>
       </div>
     </div>
@@ -58,7 +83,7 @@ function removeToken(token: string) {
 
 function apply() { emit('apply-context', aiContext.value) }
 
-// 在抽屉中输入 @ 时弹出选择器
+// Pop up selector when typing @ in drawer
 const cardStore = useCardStore()
 const { activeCard } = storeToRefs(cardStore)
 let drawerTextarea: HTMLTextAreaElement | null = null
@@ -91,4 +116,4 @@ function handleDrawerInput(ev: Event) {
 .context-area { width: 100%; }
 .actions { display: flex; gap: 8px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-</style> 
+</style>

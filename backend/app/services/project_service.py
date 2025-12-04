@@ -11,12 +11,12 @@ from app.services.kg_provider import get_provider
 
 FREE_PROJECT_NAME = "__free__"
 
-# 获取或创建保留项目（__free__）
+# Get or create reserved project (__free__)
 def get_or_create_free_project(session: Session) -> Project:
     proj = session.exec(select(Project).where(Project.name == FREE_PROJECT_NAME)).first()
     if proj:
         return proj
-    proj = Project(name=FREE_PROJECT_NAME, description="系统保留项目：存放自由卡片")
+    proj = Project(name=FREE_PROJECT_NAME, description="System reserved project: store free cards")
     session.add(proj)
     session.commit()
     session.refresh(proj)
@@ -44,24 +44,24 @@ def create_project(session: Session, project_in: ProjectCreate) -> Project:
     session.commit()
     session.refresh(db_project)
     
-    # 如果传入的是 workflow_id，则直接运行该工作流
+    # If workflow_id passed, run that workflow directly
     workflow_id = getattr(project_in, 'workflow_id', None)
     if isinstance(workflow_id, int) and workflow_id > 0:
         wf = session.get(Workflow, workflow_id)
         if wf:
-            # 直接创建一次运行，作用域仅携带 project_id
+            # Create a run directly, scope only carries project_id
             from app.services.workflow_engine import engine as wf_engine
             run = wf_engine.create_run(session, wf, scope_json={"project_id": db_project.id}, params_json={}, idempotency_key=f"proj-init:{db_project.id}:{workflow_id}")
             wf_engine.run(session, run)
     else:
-        # 触发所有 onprojectcreate 工作流
+        # Trigger all onprojectcreate workflows
         try:
             workflow_triggers.trigger_on_project_create(session, db_project.id)
         except Exception:
-            # 不阻断项目创建
+            # Do not block project creation
             pass
     
-    # 刷新以加载新创建的卡片到项目关系中
+    # Refresh to load newly created cards into project relationships
     session.refresh(db_project)
     
     return db_project
@@ -84,17 +84,17 @@ def delete_project(session: Session, project_id: int) -> bool:
     project = session.get(Project, project_id)
     if not project:
         return False
-    # 保留项目禁止删除
+    # Reserved project cannot be deleted
     if getattr(project, 'name', None) == FREE_PROJECT_NAME:
         return False
-    # 先删除数据库中的项目记录
+    # Delete project record from DB first
     session.delete(project)
     session.commit()
-    # 再清理图数据库中该项目的所有实体与关系
+    # Then clean up all entities and relations of this project in Graph DB
     try:
         kg = get_provider()
         kg.delete_project_graph(project_id)
     except Exception:
-        # 避免图数据库不可用时影响主流程
+        # Avoid affecting main flow when Graph DB is unavailable
         pass
     return True 

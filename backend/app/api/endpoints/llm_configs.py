@@ -37,24 +37,24 @@ def delete_llm_config_endpoint(config_id: int, session: Session = Depends(get_se
         raise HTTPException(status_code=404, detail="LLM Config not found")
     return ApiResponse(message="LLM Config deleted successfully")
 
-@router.post("/test", response_model=ApiResponse, summary="测试 LLM 连接")
+@router.post("/test", response_model=ApiResponse, summary="Test LLM connection")
 async def test_llm_connection_endpoint(connection_data: LLMConnectionTest, session: Session = Depends(get_session)):
-    """使用传入参数临时构造一个 Agent 并发起一次最小调用以验证连通性。"""
+    """Temporarily construct an Agent using passed parameters and initiate a minimal call to verify connectivity."""
     try:
-        # 复用 pydantic-ai Provider/Model，按 provider 分支进行最小连通性测试
+        # Reuse pydantic-ai Provider/Model, minimal connectivity test by provider branch
         from pydantic_ai import Agent
         from pydantic_ai.settings import ModelSettings
 
         provider = None
         model = None
         if connection_data.provider == 'google':
-            # Google Generative Language API（API Key）
+            # Google Generative Language API (API Key)
             from pydantic_ai.models.google import GoogleModel
             from pydantic_ai.providers.google import GoogleProvider
             provider = GoogleProvider(api_key=connection_data.api_key)
             model = GoogleModel(connection_data.model_name, provider=provider)
         else:
-            # 默认走 OpenAI 兼容路径（包含 custom/base_url）
+            # Default to OpenAI compatible path (including custom/base_url)
             from pydantic_ai.models.openai import OpenAIModel
             from pydantic_ai.providers.openai import OpenAIProvider
             provider_cfg = {"api_key": connection_data.api_key}
@@ -63,14 +63,14 @@ async def test_llm_connection_endpoint(connection_data: LLMConnectionTest, sessi
             provider = OpenAIProvider(**provider_cfg)
             model = OpenAIModel(connection_data.model_name, provider=provider)
 
-        agent = Agent(model, system_prompt="你是一个助手。", model_settings=ModelSettings(timeout=15))
+        agent = Agent(model, system_prompt="You are a helpful assistant.", model_settings=ModelSettings(timeout=15))
         await agent.run("ping")
         return ApiResponse(message="Connection successful")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"连接测试失败: {e}")
+        raise HTTPException(status_code=400, detail=f"Connection test failed: {e}")
 
 
-@router.post("/{config_id}/reset-usage", response_model=ApiResponse, summary="重置统计（输入/输出token与调用次数清零）")
+@router.post("/{config_id}/reset-usage", response_model=ApiResponse, summary="Reset usage statistics (clear input/output tokens and call count)")
 def reset_llm_usage(config_id: int, session: Session = Depends(get_session)):
     ok = llm_config_service.reset_usage(session, config_id)
     if not ok:

@@ -6,7 +6,7 @@ from app.db.models import ForeshadowItem as ForeshadowItemModel
 
 
 class SuggestRequest(BaseModel):
-	text: str = Field(..., description="待分析文本")
+	text: str = Field(..., description="Text to analyze")
 
 class SuggestResponse(BaseModel):
 	goals: List[str]

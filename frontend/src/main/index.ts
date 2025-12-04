@@ -15,8 +15,8 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    title: 'Novel Forge', // 设置窗口标题
-    icon: icon, // 为所有平台设置图标
+    title: 'Novel Forge', // Set window title
+    icon: icon, // Set icon for all platforms
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -58,7 +58,7 @@ function openIdeasHome() {
     width: 1100,
     height: 760,
     show: true,
-    title: 'Novel Forge - 灵感工作台',
+    title: 'Novel Forge - Inspiration Workbench',
     autoHideMenuBar: true,
     icon: icon,
     webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false }

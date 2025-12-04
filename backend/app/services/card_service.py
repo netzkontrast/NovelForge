@@ -6,13 +6,13 @@ from fastapi import HTTPException
 from app.db.models import Card, CardType, Project
 from app.schemas.card import CardCreate, CardUpdate, CardTypeCreate, CardTypeUpdate
 import logging
-# 引入动态信息模型
+# Import dynamic info model
 from app.schemas.entity import UpdateDynamicInfo, CharacterCard, DynamicInfoItem
 from sqlalchemy import update as sa_update
 
 logger = logging.getLogger(__name__)
 
-# 每类动态信息的建议上限（超过则保留更重要/较新者）。可按需调整。
+# Suggested max items per dynamic info type (retain more important/newer ones if exceeded). Adjust as needed.
 MAX_ITEMS_BY_TYPE: dict[str, int] = {
     "心理想法/目标快照": 3,
     "等级/修为境界": 4,
@@ -24,10 +24,10 @@ MAX_ITEMS_BY_TYPE: dict[str, int] = {
     # DynamicInfoType.CONNECTION: 5,
 }
 
-# 全局权重阈值（默认 0.45）
+# Global weight threshold (default 0.45)
 WEIGHT_THRESHOLD =0.45
 
-# ---- ：子树工具 ----
+# ---- : Subtree Tools ----
 
 def _fetch_children(db: Session, parent_ids: List[int]) -> List[Card]:
     if not parent_ids:
@@ -37,7 +37,7 @@ def _fetch_children(db: Session, parent_ids: List[int]) -> List[Card]:
 
 
 def _collect_subtree(db: Session, root: Card) -> List[Card]:
-    """按广度优先收集包含 root 在内的整棵子树（返回顺序：父在前、子在后）。"""
+    """BFS collect entire subtree including root (order: parent first, children later)."""
     result: List[Card] = []
     queue: List[Card] = [root]
     while queue:
@@ -68,17 +68,17 @@ def _shallow_clone(src: Card, project_id: int, parent_id: Optional[int], display
         ai_context_template=src.ai_context_template,
     )
 
-# ---- 标题后缀生成 ----
+# ---- Title Suffix Generation ----
 
 def _generate_non_conflicting_title(db: Session, project_id: int, base_title: str) -> str:
-    title = (base_title or '').strip() or '新卡片'
-    # 收集同项目内所有以 base_title 开头且形如 base_title(数字) 的标题
+    title = (base_title or '').strip() or 'New Card'
+    # Collect all titles starting with base_title and form base_title(number) in same project
     stmt = select(Card.title).where(Card.project_id == project_id)
     titles = db.exec(stmt).all() or []
     existing_titles = set(titles)
     if title not in existing_titles:
         return title
-    # 找最大后缀
+    # Find max suffix
     import re
     pattern = re.compile(rf"^{re.escape(title)}\((\d+)\)$")
     max_n = 0
@@ -99,7 +99,7 @@ class CardService:
         self.db = db
 
     def get_all_for_project(self, project_id: int) -> List[Card]:
-        # 获取该项目所有卡片，树形结构将在客户端构建。
+        # Get all cards for project, tree structure will be built on client.
         statement = (
             select(Card)
             .where(Card.project_id == project_id)
@@ -117,7 +117,7 @@ class CardService:
         if not card_type:
              raise HTTPException(status_code=404, detail=f"CardType with id {card_create.card_type_id} not found")
 
-        # 单例限制：在保留项目(__free__)中放行
+        # Singleton restriction: Allow in reserved project (__free__)
         proj = self.db.get(Project, project_id)
         is_free_project = getattr(proj, 'name', None) == "__free__"
         if card_type.is_singleton and not is_free_project:
@@ -129,20 +129,20 @@ class CardService:
                     detail=f"A card of type '{card_type.name}' already exists in this project, and it is a singleton."
                 )
 
-        # 决定显示顺序
+        # Determine display order
         statement = select(Card).where(Card.project_id == project_id, Card.parent_id == card_create.parent_id)
         sibling_cards = self.db.exec(statement).all()
         display_order = len(sibling_cards)
 
-        # 如果没有显式提供 ai_context_template，则从卡片类型继承默认模板
+        # If ai_context_template not explicitly provided, inherit default from card type
         ai_context_template = getattr(card_create, 'ai_context_template', None)
-        # 自由卡默认不注入上下文：强制清空模板
+        # Free card default no context injection: force clear template
         if is_free_project:
             ai_context_template = None
         elif not ai_context_template:
             ai_context_template = card_type.default_ai_context_template
 
-        # 自动处理标题冲突：相同标题追加 (n)
+        # Auto handle title conflict: append (n) to duplicate title
         final_title = _generate_non_conflicting_title(self.db, project_id, getattr(card_create, 'title', '') or card_type.name)
 
         card = Card(
@@ -159,8 +159,8 @@ class CardService:
     @staticmethod
     def create_initial_cards_for_project(db: Session, project_id: int, template_items: Optional[List[dict]] = None):
         """
-        # 为新项目创建初始卡片集合。
-        # 如果提供了 template_items，则使用它们；否则回退到内置的默认列表（兼容旧版）。
+        # Create initial card set for new project.
+        # If template_items provided, use them; otherwise fallback to built-in default list (backward compatibility).
         # template_items: List[ { card_type_id: int, display_order: int, title_override?: str } ]
         """
         if template_items is None:
@@ -178,7 +178,7 @@ class CardService:
                     statement = select(CardType).where(CardType.name == card_type_name)
                     card_type = db.exec(statement).first()
                     if card_type:
-                        # 创建卡片
+                        # Create card
                         new_card = Card(
                             title=card_type_name,
                             content={},
@@ -193,7 +193,7 @@ class CardService:
                     logger.error(f"Failed creating initial card for type {card_type_name}: {e}")
             return
 
-        # 使用模板条目创建
+        # Create using template items
         for item in sorted(template_items, key=lambda x: x.get('display_order', 0)):
             try:
                 ct = db.get(CardType, item['card_type_id'])
@@ -221,9 +221,9 @@ class CardService:
             
         update_data = card_update.model_dump(exclude_unset=True)
 
-        # 如果parent_id改变了，我们需要更新display_order
+        # If parent_id changed, we need to update display_order
         if 'parent_id' in update_data and card.parent_id != update_data['parent_id']:
-            # 这个逻辑可能很复杂。现在只是将新的列表追加到末尾。
+            # Logic might be complex. Just append to end for now.
             statement = select(Card).where(Card.project_id == card.project_id, Card.parent_id == update_data['parent_id'])
             sibling_cards = self.db.exec(statement).all()
             update_data['display_order'] = len(sibling_cards)
@@ -238,7 +238,7 @@ class CardService:
         return card
 
     def delete(self, card_id: int) -> bool:
-        # 递归删除由关系中的级联选项处理
+        # Recursive delete handled by cascade option in relationship
         card = self.get_by_id(card_id)
         if not card:
             return False
@@ -246,25 +246,25 @@ class CardService:
         self.db.commit()
         return True 
 
-    # ---- 移动与复制 ----
+    # ---- Move and Copy ----
     def move_card(self, card_id: int, target_project_id: int, parent_id: Optional[int] = None) -> Optional[Card]:
         root = self.get_by_id(card_id)
         if not root:
             return None
-        # 收集子树
+        # Collect subtree
         subtree = _collect_subtree(self.db, root)
         id_set = {c.id for c in subtree}
-        # 校验：若指定 parent_id，不能把父节点设为子树内部其它节点（避免环）
+        # Check: If parent_id specified, cannot set parent to a descendant of itself (avoid cycle)
         if parent_id and parent_id in id_set and parent_id != root.id:
             raise HTTPException(status_code=400, detail="Cannot set parent to a descendant of itself")
-        # 目标父节点项目校验
+        # Target parent project check
         if parent_id is not None:
             parent_card = self.get_by_id(parent_id)
             if not parent_card:
                 raise HTTPException(status_code=404, detail="Target parent card not found")
             if parent_card.project_id != target_project_id:
                 raise HTTPException(status_code=400, detail="Target parent card not in target project")
-        # 非保留项目的单例限制（跨项目移动时校验）
+        # Non-reserved project singleton restriction (check when moving across projects)
         if target_project_id != root.project_id:
             target_proj = self.db.get(Project, target_project_id)
             is_target_free = getattr(target_proj, 'name', None) == "__free__"
@@ -273,14 +273,14 @@ class CardService:
                 exists = self.db.exec(exists_stmt).first()
                 if exists:
                     raise HTTPException(status_code=409, detail=f"A card of type '{root.card_type.name}' already exists in target project (singleton)")
-        # 更新项目ID（整棵子树）
+        # Update project ID (entire subtree)
         for node in subtree:
             node.project_id = target_project_id
-        # 调整根的父与显示顺序
+        # Adjust root parent and display order
         root.parent_id = parent_id
-        # 单例限制：在保留项目(__free__)内的同类型允许多个，因此 display_order 也允许直接追加
+        # Singleton restriction: Allow multiple same types in reserved project (__free__), so display_order also allow append directly
         root.display_order = _next_display_order(self.db, target_project_id, parent_id)
-        # 提交
+        # Commit
         for node in subtree:
             self.db.add(node)
         self.db.commit()
@@ -291,7 +291,7 @@ class CardService:
         src_root = self.get_by_id(card_id)
         if not src_root:
             return None
-        # 非保留项目的单例限制（复制到目标时校验根类型）
+        # Non-reserved project singleton restriction (check root type when copying to target)
         target_proj = self.db.get(Project, target_project_id)
         is_target_free = getattr(target_proj, 'name', None) == "__free__"
         if src_root.card_type and getattr(src_root.card_type, 'is_singleton', False) and not is_target_free:
@@ -299,12 +299,12 @@ class CardService:
             exists = self.db.exec(exists_stmt).first()
             if exists:
                 raise HTTPException(status_code=409, detail=f"A card of type '{src_root.card_type.name}' already exists in target project (singleton)")
-        # 收集子树，按父在前的顺序复制
+        # Collect subtree, copy in order of parent first
         subtree = _collect_subtree(self.db, src_root)
         old_to_new_id: dict[int, int] = {}
         new_nodes_by_old_id: dict[int, Card] = {}
         for node in subtree:
-            # 计算新父ID
+            # Calculate new parent ID
             if node.id == src_root.id:
                 new_parent_id = parent_id
                 new_order = _next_display_order(self.db, target_project_id, new_parent_id)
@@ -313,7 +313,7 @@ class CardService:
                 new_parent_id = old_to_new_id.get(old_parent_id) if old_parent_id is not None else None
                 new_order = _next_display_order(self.db, target_project_id, new_parent_id)
             clone = _shallow_clone(node, target_project_id, new_parent_id, new_order)
-            # 复制时也避免标题冲突
+            # Avoid title conflict when copying too
             clone.title = _generate_non_conflicting_title(self.db, target_project_id, clone.title)
             self.db.add(clone)
             self.db.commit()

@@ -40,7 +40,7 @@ def _compose_schema_with_types(schema: dict, db: Session) -> dict:
     existing_defs = result['$defs']
     ref_names: set = set()
     _collect_ref_names(result, ref_names)
-    # 查询所有类型一次，建立 name/model_name -> schema 映射
+    # Query all types once, build name/model_name -> schema mapping
     all_types = db.query(CardType).all()
     by_model = {}
     for ct in all_types:
@@ -48,7 +48,7 @@ def _compose_schema_with_types(schema: dict, db: Session) -> dict:
             if ct.model_name:
                 by_model[ct.model_name] = ct.json_schema
             by_model[ct.name] = ct.json_schema
-    # 覆盖策略：对所有被引用的名称，若 CardType 有对应结构，则覆盖/写入到 $defs
+    # Override strategy: for all referenced names, if CardType has a corresponding structure, overwrite/write to $defs
     for n in ref_names:
         sch = by_model.get(n)
         if sch:
@@ -57,7 +57,7 @@ def _compose_schema_with_types(schema: dict, db: Session) -> dict:
     return result
 
 # --- CardType Endpoints ---
-# 说明：CardTypeRead 需包含 default_ai_context_template 字段（由 Pydantic schema 定义控制）。
+# Note: CardTypeRead needs to contain default_ai_context_template field (controlled by Pydantic schema definition).
 
 @router.post("/card-types", response_model=CardTypeRead)
 def create_card_type(card_type: CardTypeCreate, db: Session = Depends(get_session)):
@@ -92,7 +92,7 @@ def delete_card_type(card_type_id: int, db: Session = Depends(get_session)):
     if not db_card_type:
         raise HTTPException(status_code=404, detail="CardType not found")
     if getattr(db_card_type, 'built_in', False):
-        raise HTTPException(status_code=400, detail="系统内置卡片类型不可删除")
+        raise HTTPException(status_code=400, detail="System built-in card types cannot be deleted")
     if not service.delete(card_type_id):
         raise HTTPException(status_code=404, detail="CardType not found")
     return {"ok": True}
@@ -182,46 +182,46 @@ def update_card(card_id: int, card: CardUpdate, db: Session = Depends(get_sessio
 @router.post("/cards/batch-reorder")
 def batch_reorder_cards(request: CardBatchReorderRequest, db: Session = Depends(get_session)):
     """
-    批量更新卡片排序
+    Batch update card ordering
     
     Args:
-        request: 包含要更新的卡片列表，每个卡片包含 card_id, display_order, parent_id
+        request: Contains list of cards to update, each containing card_id, display_order, parent_id
         
     Returns:
-        更新的卡片数量和成功状态
+        Number of updated cards and success status
     """
     try:
         updated_count = 0
         
-        # 批量更新所有卡片
+        # Batch update all cards
         for item in request.updates:
             card = db.get(Card, item.card_id)
             if card:
-                # 更新 display_order
+                # Update display_order
                 card.display_order = item.display_order
                 
-                # 更新 parent_id（无论是否变化都更新，因为前端已经明确传递了值）
-                # 这样可以正确处理：设置为根级(null)、设置为子卡片(有值)、保持不变(传递当前值)
+                # Update parent_id (update regardless of change, because frontend has explicitly passed the value)
+                # This correctly handles: setting to root (null), setting as child (with value), keeping unchanged (passing current value)
                 card.parent_id = item.parent_id
                     
                 db.add(card)
                 updated_count += 1
         
-        # 一次性提交所有更新
+        # Commit all updates at once
         db.commit()
         
-        logger.info(f"批量更新排序完成，共更新 {updated_count} 张卡片")
+        logger.info(f"Batch reorder completed, updated {updated_count} cards")
         
         return {
             "success": True,
             "updated_count": updated_count,
-            "message": f"成功更新 {updated_count} 张卡片的排序"
+            "message": f"Successfully updated ordering of {updated_count} cards"
         }
         
     except Exception as e:
         db.rollback()
-        logger.error(f"批量更新排序失败: {e}")
-        raise HTTPException(status_code=500, detail=f"批量更新失败: {str(e)}")
+        logger.error(f"Batch reorder failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Batch update failed: {str(e)}")
 
 
 @router.delete("/cards/{card_id}", status_code=204)
@@ -255,7 +255,7 @@ def get_card_schema(card_id: int, db: Session = Depends(get_session)) -> Dict[st
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
     effective = c.json_schema if c.json_schema is not None else (c.card_type.json_schema if c.card_type else None)
-    # 动态装配引用
+    # Dynamically assemble references
     composed = _compose_schema_with_types(effective or {}, db)
     return {"json_schema": c.json_schema, "effective_schema": composed, "follow_type": c.json_schema is None}
 
@@ -264,7 +264,7 @@ def update_card_schema(card_id: int, payload: Dict[str, Any], db: Session = Depe
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
-    # 传入 null/None 表示恢复跟随类型
+    # Passing null/None means restore following type
     c.json_schema = payload.get("json_schema", None)
     db.add(c)
     db.commit()
@@ -280,7 +280,7 @@ def apply_card_schema_to_type(card_id: int, db: Session = Depends(get_session)) 
         raise HTTPException(status_code=404, detail="Card not found")
     if not c.card_type:
         raise HTTPException(status_code=400, detail="Card has no type")
-    # 取实例 schema；若为空则取有效 schema
+    # Get instance schema; if empty, get effective schema
     effective = c.json_schema if c.json_schema is not None else (c.card_type.json_schema or None)
     if effective is None:
         raise HTTPException(status_code=400, detail="No schema to apply")
@@ -296,16 +296,16 @@ def _merge_effective_params(db: Session, card: Card) -> Dict[str, Any]:
     base = (card.card_type.ai_params if card.card_type and card.card_type.ai_params else {}) or {}
     override = (card.ai_params or {})
     eff = { **base, **override }
-    # 补齐字段结构（五项）：llm_config_id/prompt_name/temperature/max_tokens/timeout
+    # Fill field structure (five items): llm_config_id/prompt_name/temperature/max_tokens/timeout
     if eff.get("llm_config_id") in (None, 0, "0", ""):
-        # 选用一个默认 LLM（id 最小）
+        # Choose a default LLM (smallest id)
         try:
             llm = db.query(LLMConfig).order_by(LLMConfig.id.asc()).first()  # type: ignore
             if llm:
                 eff["llm_config_id"] = int(getattr(llm, "id", 0))
         except Exception:
             pass
-    # 规范类型
+    # Normalize type
     if eff.get("llm_config_id") is not None:
         try: eff["llm_config_id"] = int(eff.get("llm_config_id"))
         except Exception: pass

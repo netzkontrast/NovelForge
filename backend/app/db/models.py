@@ -22,7 +22,7 @@ class LLMConfig(SQLModel, table=True):
     api_base: Optional[str] = None
     api_key: str
     base_url: Optional[str] = None
-    # 统计与配额（-1 表示不限）——在 DB 层也设置 server_default，便于 Alembic 自动包含
+    # Stats and Quotas (-1 means unlimited) - Also set server_default at DB layer for Alembic automatic inclusion
     token_limit: int = Field(
         default=-1,
         sa_column=Column(sa.Integer, nullable=False, server_default='-1')
@@ -43,7 +43,7 @@ class LLMConfig(SQLModel, table=True):
         default=0,
         sa_column=Column(sa.Integer, nullable=False, server_default='0')
     )
-    # RPM/TPM 仅占位，暂不实现
+    # RPM/TPM placeholder only, not implemented yet
     rpm_limit: int = Field(
         default=-1,
         sa_column=Column(sa.Integer, nullable=False, server_default='-1')
@@ -67,20 +67,20 @@ class Prompt(SQLModel, table=True):
 class CardType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    # 兼容旧的模型名称（如 CharacterCard/SceneCard），为空则默认等于 name
+    # Compatible with old model names (e.g. CharacterCard/SceneCard), if empty defaults to equal name
     model_name: Optional[str] = Field(default=None, index=True)
     description: Optional[str] = None
-    # 类型内置结构（JSON Schema）
+    # Type built-in structure (JSON Schema)
     json_schema: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    # 类型级默认 AI 参数（模型ID/提示词/采样等）
+    # Type level default AI params (model ID/prompt/sampling etc.)
     ai_params: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     editor_component: Optional[str] = None  # e.g., 'NovelEditor' for custom UI
     is_ai_enabled: bool = Field(default=True)
     is_singleton: bool = Field(default=False)  # e.g., only one 'Synopsis' card per project
     built_in: bool = Field(default=False)
-    # 卡片类型级别的默认上下文注入模板
+    # Card type level default context injection template
     default_ai_context_template: Optional[str] = Field(default=None)
-    # UI 布局（可选），供前端 SectionedForm 使用
+    # UI Layout (Optional), for frontend SectionedForm use
     ui_layout: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     cards: List["Card"] = Relationship(back_populates="card_type")
 
@@ -88,17 +88,17 @@ class CardType(SQLModel, table=True):
 class Card(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
-    # 兼容旧的模型名称；为空表示跟随类型的 model_name 或类型名
+    # Compatible with old model names; if empty follows type model_name or type name
     model_name: Optional[str] = Field(default=None, index=True)
     content: Any = Field(default={}, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
-    # 允许实例自定义结构；为空表示跟随类型
+    # Allow instance custom structure; if empty follows type
     json_schema: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    # 实例级 AI 参数；为空表示跟随类型
+    # Instance level AI params; if empty follows type
     ai_params: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
-    # 自引用关系，用于树形结构
+    # Self-referential relationship, for tree structure
     parent_id: Optional[int] = Field(default=None, foreign_key="card.id")
     parent: Optional["Card"] = Relationship(
         back_populates="children",
@@ -112,24 +112,24 @@ class Card(SQLModel, table=True):
         },
     )
 
-    # 项目外键
+    # Project foreign key
     project_id: int = Field(foreign_key="project.id")
     project: "Project" = Relationship(back_populates="cards")
 
-    # 卡片类型外键
+    # Card type foreign key
     card_type_id: int = Field(foreign_key="cardtype.id")
     card_type: "CardType" = Relationship(back_populates="cards")
 
-    # 用于排序卡片，用于同一父级下的排序
+    # For sorting cards, used for sorting under same parent
     display_order: int = Field(default=0)
     ai_context_template: Optional[str] = Field(default=None)
 
 
-# 伏笔登记表
+# Foreshadowing Registry
 class ForeshadowItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
-    chapter_id: Optional[int] = Field(default=None)  # 章节卡片ID或章节ID
+    chapter_id: Optional[int] = Field(default=None)  # Chapter card ID or chapter ID
     title: str
     type: str = Field(default='other', index=True)  # goal | item | person | other
     note: Optional[str] = None
@@ -138,7 +138,7 @@ class ForeshadowItem(SQLModel, table=True):
     resolved_at: Optional[datetime] = None
 
 
-# 知识库模型
+# Knowledge Base Model
 class Knowledge(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
@@ -147,7 +147,7 @@ class Knowledge(SQLModel, table=True):
     built_in: bool = Field(default=False)
 
 
-# 工作流系统
+# Workflow System
 class Workflow(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -176,9 +176,9 @@ class WorkflowTrigger(SQLModel, table=True):
 
     # onsave | ongenfinish | manual
     trigger_on: str = Field(default="manual", index=True)
-    # 可选：限定卡片类型（按名称存储，避免循环依赖）
+    # Optional: Limit card type (Store by name, avoid circular dependency)
     card_type_name: Optional[str] = None
-    # 过滤规则（JSON）
+    # Filter rules (JSON)
     filter_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     is_active: bool = Field(default=True)
 

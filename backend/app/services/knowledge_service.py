@@ -3,8 +3,8 @@ from sqlmodel import Session, select
 from app.db.models import Knowledge
 
 class KnowledgeService:
-    """知识库服务：提供知识库的增删改查。
-    注意：内置（built_in=True）的知识库不允许删除。
+    """Knowledge Base Service: Provides CRUD for knowledge bases.
+    Note: Built-in (built_in=True) knowledge bases cannot be deleted.
     """
 
     def __init__(self, db: Session) -> None:
@@ -46,7 +46,7 @@ class KnowledgeService:
         if not kb:
             return False
         if getattr(kb, 'built_in', False):
-            raise ValueError("系统内置知识库不可删除")
+            raise ValueError("System built-in knowledge base cannot be deleted")
         self.db.delete(kb)
         self.db.commit()
         return True 

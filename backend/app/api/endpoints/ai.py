@@ -26,33 +26,33 @@ from app.services import llm_config_service as _llm_svc
 
 router = APIRouter()
 
-# --- JSON Schema → Python 类型简易映射（尽量保守，无法解析的情况回退为 Any） ---
+# --- JSON Schema -> Python Type Simple Mapping (Conservative, fallback to Any) ---
 from typing import Any as _Any, Dict as _Dict, List as _List
 
-# 基于元数据的 Schema 过滤（移除 x-ai-exclude=true 的字段）
+# Schema filtering based on metadata (remove fields marked with x-ai-exclude=true)
 def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
     def prune(node: Any, parent_required: List[str] | None = None) -> Any:
         if isinstance(node, dict):
-            # 对象：过滤 properties 中标记了 x-ai-exclude 的字段
+            # Object: Filter fields marked with x-ai-exclude in properties
             if node.get('type') == 'object' and isinstance(node.get('properties'), dict):
                 props = node.get('properties') or {}
                 required = list(node.get('required') or [])
                 new_props: Dict[str, Any] = {}
                 for name, sch in props.items():
                     if isinstance(sch, dict) and sch.get('x-ai-exclude') is True:
-                        # 从 required 中剔除
+                        # Remove from required
                         if name in required:
                             required = [r for r in required if r != name]
                         continue
                     new_props[name] = prune(sch)
-                node = dict(node)  # 复制
+                node = dict(node)  # Copy
                 node['properties'] = new_props
                 if required:
                     node['required'] = required
                 elif 'required' in node:
-                    # 若全部被剔除，移除 required 字段
+                    # If all removed, remove required field
                     node.pop('required', None)
-            # 数组：递归处理 items/prefixItems（tuple）
+            # Array: Recursively process items/prefixItems (tuple)
             if node.get('type') == 'array':
                 if 'items' in node:
                     node = dict(node)
@@ -60,12 +60,12 @@ def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
                 if 'prefixItems' in node and isinstance(node.get('prefixItems'), list):
                     node = dict(node)
                     node['prefixItems'] = [prune(it) for it in node.get('prefixItems', [])]
-            # 组合关键字：递归处理 anyOf/oneOf/allOf
+            # Combinators: Recursively process anyOf/oneOf/allOf
             for kw in ('anyOf', 'oneOf', 'allOf'):
                 if isinstance(node.get(kw), list):
                     node = dict(node)
                     node[kw] = [prune(it) for it in node.get(kw, [])]
-            # $defs：仅对内部定义做递归处理（不删除定义键本身）
+            # $defs: Only recursively process internal definitions (do not remove definition keys themselves)
             if isinstance(node.get('$defs'), dict):
                 defs = node.get('$defs') or {}
                 new_defs: Dict[str, Any] = {}
@@ -73,7 +73,7 @@ def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
                     new_defs[k] = prune(v)
                 node = dict(node)
                 node['$defs'] = new_defs
-            # 清理元数据痕迹（可选，不强制）
+            # Cleanup metadata traces (optional, not mandatory)
             if 'x-ai-exclude' in node:
                 node = dict(node)
                 node.pop('x-ai-exclude', None)
@@ -86,7 +86,7 @@ def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
         root = deepcopy(schema) if isinstance(schema, dict) else {}
         return prune(root)
     except Exception:
-        # 出错时不阻断流程，回退原始 schema
+        # On error, do not block flow, fallback to original schema
         return schema
 
 
@@ -94,7 +94,7 @@ def _json_schema_to_py_type(sch: Dict[str, Any]) -> Any:
     if not isinstance(sch, dict):
         return _Any
     if '$ref' in sch:
-        # 简化处理：引用统一按对象处理
+        # Simplified handling: References handled as Dict
         return _Dict[str, _Any]
     t = sch.get('type')
     if t == 'string':
@@ -109,9 +109,9 @@ def _json_schema_to_py_type(sch: Dict[str, Any]) -> Any:
         item_sch = sch.get('items') or {}
         return _List[_json_schema_to_py_type(item_sch)]  # type: ignore[index]
     if t == 'object':
-        # 若有 properties 但为动态结构，这里按 Dict 处理
+        # If dynamic structure with properties, handle as Dict
         return _Dict[str, _Any]
-    # 未声明 type 或无法识别
+    # No type declared or unrecognized
     return _Any
 
 
@@ -130,7 +130,7 @@ def _build_model_from_json_schema(model_name: str, schema: Dict[str, Any]):
         field_defs[fname] = (anno, default_val)
     return create_model(model_name, **field_defs)
 
-# --- Schema $defs 递归补全（将内置模型的 $defs 注入自定义 Schema） ---
+# --- Schema $defs Recursion Completion (Inject $defs of built-in models into custom Schema) ---
 _BUILTIN_DEFS_CACHE: Dict[str, Any] | None = None
 
 def _get_builtin_defs() -> Dict[str, Any]:
@@ -158,7 +158,7 @@ def _collect_ref_names(node: Any) -> set[str]:
     return names
 
 def _augment_schema_with_builtin_defs(schema: Dict[str, Any]) -> Dict[str, Any]:
-    # 不修改原对象
+    # Do not modify original object
     sch = deepcopy(schema) if schema is not None else {}
     if not isinstance(sch, dict):
         return sch
@@ -166,7 +166,7 @@ def _augment_schema_with_builtin_defs(schema: Dict[str, Any]) -> Dict[str, Any]:
     defs = sch['$defs']
     builtin_defs = _get_builtin_defs()
 
-    # 迭代补全，直到无新引用
+    # Iterative completion until no new references
     seen: set[str] = set(defs.keys())
     pending = _collect_ref_names(sch) - seen
     while pending:
@@ -175,13 +175,13 @@ def _augment_schema_with_builtin_defs(schema: Dict[str, Any]) -> Dict[str, Any]:
             continue
         if name in builtin_defs:
             defs[name] = deepcopy(builtin_defs[name])
-            # 新增定义中可能还引用其他 defs
+            # New definitions might reference other defs
             newly = _collect_ref_names(defs[name]) - set(defs.keys())
             pending |= newly
-        # 若找不到该定义，则跳过（保持原样，让 LLM 容忍）
+        # If definition not found, skip (keep as is, let LLM tolerate)
     return sch
 
-# --- 动态注入 CardType 的 defs（与 cards.py 一致思想） ---
+# --- Dynamic injection of CardType defs (same idea as cards.py) ---
 def _compose_with_card_types(session: Session, schema: Dict[str, Any]) -> Dict[str, Any]:
     sch = deepcopy(schema) if isinstance(schema, dict) else {}
     if not isinstance(sch, dict):
@@ -201,56 +201,56 @@ def _compose_with_card_types(session: Session, schema: Dict[str, Any]) -> Dict[s
             defs[n] = by_model[n]
     return sch
 
-# 响应模型映射表（内置）
+# Response model map (built-in)
 from app.schemas.response_registry import RESPONSE_MODEL_MAP
 
-# 知识库占位符解析与替换
+# Knowledge base placeholder parsing and replacement
 _KB_ID_PATTERN = re.compile(r"@KB\{\s*id\s*=\s*(\d+)\s*\}")
 _KB_NAME_PATTERN = re.compile(r"@KB\{\s*name\s*=\s*([^}]+)\}")
 
 
 def _inject_knowledge(session: Session, template: str) -> str:
-    """将模板中的知识库占位符注入为实际内容。
+    """Inject knowledge base placeholders in template with actual content.
 
-    规则：
-    1) 对 "- knowledge:" 段落内的多个占位符，按顺序注入并以编号分隔：
+    Rules:
+    1) For multiple placeholders within "- knowledge:" paragraph, inject sequentially separated by numbering:
        - knowledge:\n1.\n<KB1>\n\n2.\n<KB2> ...
-    2) knowledge 段之外若出现占位符，做就地替换为知识全文。
-    3) 若找不到对应知识库，保留提示注释，避免中断。
+    2) If placeholder appears outside knowledge paragraph, do in-place replacement with full text.
+    3) If knowledge base not found, keep hint comment to avoid interruption.
     """
     svc = KnowledgeService(session)
 
     def fetch_kb_by_id(kid: int) -> str:
         kb = svc.get_by_id(kid)
-        return kb.content if kb and kb.content else f"/* 知识库未找到: id={kid} */"
+        return kb.content if kb and kb.content else f"/* Knowledge Base not found: id={kid} */"
 
     def fetch_kb_by_name(name: str) -> str:
         kb = svc.get_by_name(name)
-        return kb.content if kb and kb.content else f"/* 知识库未找到: name={name} */"
+        return kb.content if kb and kb.content else f"/* Knowledge Base not found: name={name} */"
 
-    # 先处理 knowledge 分段（更结构化的注入）
+    # Process knowledge segment first (more structured injection)
     lines = template.splitlines()
     i = 0
     out_lines: list[str] = []
     while i < len(lines):
         line = lines[i]
-        # 匹配顶级的 "- knowledge:" 行（大小写不敏感）
+        # Match top-level "- knowledge:" line (case insensitive)
         if re.match(r"^\s*-\s*knowledge\s*:\s*$", line, flags=re.IGNORECASE):
-            # 收集该段落内的占位符行，直到遇到下一个顶级 "- <Something>" 行或文件结尾
+            # Collect placeholder lines within this paragraph until next top-level "- <Something>" line or EOF
             j = i + 1
             block_lines: list[str] = []
             while j < len(lines) and not re.match(r"^\s*-\s*\w", lines[j]):
                 block_lines.append(lines[j])
                 j += 1
-            # 提取占位符顺序
+            # Extract placeholder order
             placeholders: list[tuple[str, str]] = []  # (mode, value)
             for bl in block_lines:
                 for m in _KB_ID_PATTERN.finditer(bl):
                     placeholders.append(("id", m.group(1)))
                 for m in _KB_NAME_PATTERN.finditer(bl):
                     placeholders.append(("name", m.group(1).strip().strip('\"\'')))
-            # 构建编号内容
-            out_lines.append(line)  # 保留标题行 "- knowledge:"
+            # Build numbered content
+            out_lines.append(line)  # Keep title line "- knowledge:"
             if placeholders:
                 for idx, (mode, val) in enumerate(placeholders, start=1):
                     out_lines.append(f"{idx}.")
@@ -258,14 +258,14 @@ def _inject_knowledge(session: Session, template: str) -> str:
                         try:
                             content = fetch_kb_by_id(int(val))
                         except Exception:
-                            content = f"/* 知识库未找到: id={val} */"
+                            content = f"/* Knowledge Base not found: id={val} */"
                     else:
                         content = fetch_kb_by_name(val)
                     out_lines.append(content.strip())
-                    # 段落间空行
+                    # Empty line between paragraphs
                     if idx < len(placeholders):
                         out_lines.append("")
-            # 跳过原 block
+            # Skip original block
             i = j
             continue
         else:
@@ -274,12 +274,12 @@ def _inject_knowledge(session: Session, template: str) -> str:
 
     enumerated_text = "\n".join(out_lines)
 
-    # knowledge 段之外的就地替换（若仍有占位符残留）
+    # In-place replacement outside knowledge segment (if placeholders remain)
     def repl_id(m: re.Match) -> str:
         try:
             kid = int(m.group(1))
         except Exception:
-            return f"/* 知识库未找到: id={m.group(1)} */"
+            return f"/* Knowledge Base not found: id={m.group(1)} */"
         return fetch_kb_by_id(kid)
 
     def repl_name(m: re.Match) -> str:
@@ -290,12 +290,12 @@ def _inject_knowledge(session: Session, template: str) -> str:
     result = _KB_NAME_PATTERN.sub(repl_name, result)
     return result
 
-@router.get("/schemas", response_model=Dict[str, Any], summary="获取所有输出模型的JSON Schema（仅内置）")
+@router.get("/schemas", response_model=Dict[str, Any], summary="Get all output model JSON Schemas (Built-in only)")
 def get_all_schemas(session: Session = Depends(get_session)):
-    """返回内置 pydantic 模型的 schema 聚合，键为模型名称。"""
+    """Return schema aggregation of built-in pydantic models, keys are model names."""
     all_definitions: Dict[str, Any] = {}
 
-    # 1) 内置 pydantic 模型
+    # 1) Built-in pydantic models
     for name, model_class in RESPONSE_MODEL_MAP.items():
         schema = model_class.model_json_schema(ref_template="#/$defs/{model}")
         if '$defs' in schema:
@@ -303,7 +303,7 @@ def get_all_schemas(session: Session = Depends(get_session)):
             del schema['$defs']
         all_definitions[name] = schema
 
-    # 动态修复 CharacterCard.dynamic_info 的属性
+    # Dynamically fix CharacterCard.dynamic_info attributes
     try:
         cc = all_definitions.get('CharacterCard')
         if isinstance(cc, dict):
@@ -325,14 +325,14 @@ def get_all_schemas(session: Session = Depends(get_session)):
                     "properties": {
                         ev: {"type": "array", "items": item_schema} for ev in enum_values
                     },
-                    "description": "角色动态信息，按类别分组的数组（键为中文枚举值）"
+                    "description": "Character dynamic info, array grouped by category (keys are Chinese enum values)"
                 }
                 cc['properties'] = props
                 all_definitions['CharacterCard'] = cc
     except Exception:
         pass
 
-    # 2) 注入 entity 动态信息相关模型（用于前端解析 $ref: DynamicInfo 等）
+    # 2) Inject entity dynamic info related models (for frontend parsing $ref: DynamicInfo etc.)
     try:
         entity_models = [
             entity_schemas.DynamicInfoItem,
@@ -350,9 +350,9 @@ def get_all_schemas(session: Session = Depends(get_session)):
 
     return all_definitions
 
-@router.get("/content-models", response_model=List[str], summary="获取所有可用输出模型名称")
+@router.get("/content-models", response_model=List[str], summary="Get all available output model names")
 def get_content_models(session: Session = Depends(get_session)):
-    # 仅返回内置模型名称
+    # Only return built-in model names
     return list(RESPONSE_MODEL_MAP.keys())
 
 
@@ -360,15 +360,15 @@ async def stream_wrapper(generator):
     async for item in generator:
         yield f"data: {json.dumps({'content': item})}\n\n"
 
-@router.get("/config-options", summary="获取AI生成配置选项")
+@router.get("/config-options", summary="Get AI generation configuration options")
 async def get_ai_config_options(session: Session = Depends(get_session)):
-    """获取AI生成时可用的配置选项"""
+    """Get available configuration options for AI generation"""
     try:
-        # 获取所有LLM配置
+        # Get all LLM configs
         llm_configs = llm_config_service.get_llm_configs(session)
-        # 获取所有提示词
+        # Get all prompts
         prompts = prompt_service.get_prompts(session)
-        # 响应模型仅内置
+        # Response models are built-in only
         response_models = get_content_models(session)
         return ApiResponse(data={
             "llm_configs": [{"id": config.id, "display_name": config.display_name or config.model_name} for config in llm_configs],
@@ -377,54 +377,54 @@ async def get_ai_config_options(session: Session = Depends(get_session)):
             "response_models": response_models
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取配置选项失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get config options: {str(e)}")
 
-@router.get("/prompts/render", summary="渲染并注入知识库的提示词模板")
+@router.get("/prompts/render", summary="Render and inject knowledge base into prompt template")
 async def render_prompt_with_knowledge(name: str, session: Session = Depends(get_session)):
     p = prompt_service.get_prompt_by_name(session, name)
     if not p or not p.template:
-        raise HTTPException(status_code=404, detail=f"未找到提示词: {name}")
+        raise HTTPException(status_code=404, detail=f"Prompt not found: {name}")
     try:
         text = _inject_knowledge(session, str(p.template))
         return ApiResponse(data={"text": text})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"渲染失败: {e}")
+        raise HTTPException(status_code=500, detail=f"Render failed: {e}")
 
-@router.post("/generate", summary="通用AI生成接口")
+@router.post("/generate", summary="General AI Generation Endpoint")
 async def generate_ai_content(
     request: GeneralAIRequest = Body(...),
     session: Session = Depends(get_session),
 ):
     """
-    通用的AI内容生成端点：前端必须提供 response_model_schema。
+    General AI content generation endpoint: Frontend must provide response_model_schema.
     """
-    # 基本参数校验：input/llm_config_id/prompt_name/response_model_schema 必填
+    # Basic parameter validation: input/llm_config_id/prompt_name/response_model_schema required
     if not request.input or not request.llm_config_id or not request.prompt_name:
-        raise HTTPException(status_code=400, detail="缺少必要的生成参数: input, llm_config_id 或 prompt_name")
+        raise HTTPException(status_code=400, detail="Missing required generation parameters: input, llm_config_id or prompt_name")
     if request.response_model_schema is None:
-        raise HTTPException(status_code=400, detail="请提供 response_model_schema")
+        raise HTTPException(status_code=400, detail="Please provide response_model_schema")
 
-    # 解析响应模型（仅动态 schema）
+    # Parse response model (Dynamic schema only)
     try:
-        # 先动态注入 CardType 的 defs
+        # Dynamically inject CardType defs first
         composed = _compose_with_card_types(session, request.response_model_schema)
-        # 在补全内置 defs 前，先基于 x-ai-exclude 过滤字段
+        # Before completing built-in defs, filter fields based on x-ai-exclude
         composed = _filter_schema_for_ai(composed)
-        # 再补全内置 defs
+        # Complete built-in defs
         schema_for_prompt: Dict[str, Any] | None = _augment_schema_with_builtin_defs(composed)
         resp_model = _build_model_from_json_schema('DynamicResponseModel', schema_for_prompt or composed)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"动态创建模型失败: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to create dynamic model: {e}")
 
-    # 获取提示词
+    # Get prompt
     prompt = prompt_service.get_prompt_by_name(session, request.prompt_name)
     if not prompt:
-        raise HTTPException(status_code=400, detail=f"未找到提示词名称: {request.prompt_name}")
+        raise HTTPException(status_code=400, detail=f"Prompt name not found: {request.prompt_name}")
 
-    # 注入知识库
+    # Inject knowledge base
     prompt_template = _inject_knowledge(session, prompt.template or '')
 
-    # System Prompt：携带 JSON Schema
+    # System Prompt: Carry JSON Schema
     schema_json = json.dumps(schema_for_prompt if schema_for_prompt is not None else resp_model.model_json_schema(), indent=2, ensure_ascii=False)
     system_prompt = (
         f"{prompt_template}\n\n"
@@ -448,7 +448,7 @@ async def generate_ai_content(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    # 触发 OnGenerateFinish（若能定位 card）
+    # Trigger OnGenerateFinish (if card can be located)
     card: Card | None = None
     try:
         card_id = None
@@ -466,14 +466,14 @@ async def generate_ai_content(
 
 @router.post("/generate/continuation", 
              response_model=ApiResponse[ContinuationResponse], 
-             summary="续写正文",
+             summary="Continue writing text",
              responses={
                  200: {
                      "content": {
                          "application/json": {},
                          "text/event-stream": {}
                      },
-                     "description": "成功返回续写结果或事件流"
+                     "description": "Successfully returned continuation result or event stream"
                  }
              })
 async def generate_continuation(
@@ -481,27 +481,27 @@ async def generate_continuation(
     session: Session = Depends(get_session),
 ):
     try:
-        # 强制从 prompt_name 读取模板作为 system prompt
+        # Force reading template from prompt_name as system prompt
         if not request.prompt_name:
-            raise HTTPException(status_code=400, detail="续写必须指定 prompt_name")
+            raise HTTPException(status_code=400, detail="Continuation must specify prompt_name")
         p = prompt_service.get_prompt_by_name(session, request.prompt_name)
         if not p or not p.template:
-            raise HTTPException(status_code=400, detail=f"未找到提示词名称: {request.prompt_name}")
-        # 注入知识库
+            raise HTTPException(status_code=400, detail=f"Prompt name not found: {request.prompt_name}")
+        # Inject knowledge base
         system_prompt = _inject_knowledge(session, str(p.template))
 
         if request.stream:
-            # 先做一次配额预检，避免流式过程中才抛错
+            # Perform quota pre-check to avoid errors during streaming
             ok, reason = _llm_svc.can_consume(session, request.llm_config_id, 0, 0, 1)
             if not ok:
-                raise HTTPException(status_code=400, detail=f"LLM 配额不足：{reason}")
+                raise HTTPException(status_code=400, detail=f"LLM quota insufficient: {reason}")
             async def _stream_and_trigger():
                 content_acc = []
                 async for chunk in agent_service.generate_continuation_streaming(session, request, system_prompt):
                     content_acc.append(chunk)
                     yield chunk
                 try:
-                    # 续写结束后触发
+                    # Trigger after continuation finishes
                     trigger_on_generate_finish(session, None, request.project_id)
                 except Exception:
                     pass
@@ -519,6 +519,6 @@ async def generate_continuation(
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 from app.schemas.wizard import Tags as _Tags
-@router.get("/models/tags", response_model=_Tags, summary="导出 Tags 模型（用于类型生成）")
+@router.get("/models/tags", response_model=_Tags, summary="Export Tags model (for type generation)")
 def export_tags_model():
     return _Tags() 

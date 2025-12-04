@@ -32,12 +32,11 @@ function handleLogoClick() {
 const isLogoClickable = computed(() => currentView.value !== 'dashboard')
 
 function openIdeasWorkbench() {
-  // 直接调用主进程打开新窗口，避免当前窗口路由或状态变化引起的闪烁
   // @ts-ignore
   window.api?.openIdeasHome?.()
 }
 
-// 知识库抽屉
+// Knowledge Drawer
 // const kbVisible = ref(false)
 </script>
 
@@ -47,13 +46,13 @@ function openIdeasWorkbench() {
       <span class="logo-text">Novel Forge</span>
     </div>
     <div class="actions-container">
-      <el-button type="primary" title="灵感工作台" @click="openIdeasWorkbench">
+      <el-button type="primary" title="Inspiration Workbench" @click="openIdeasWorkbench">
         <el-icon><Document /></el-icon>
-        <span style="margin-left:6px;">灵感</span>
+        <span style="margin-left:6px;">Inspiration</span>
       </el-button>
-      <el-button type="primary" plain title="工作流" @click="openWorkflowManager">工作流</el-button>
-      <el-button :icon="isDarkMode ? Moon : Sunny" @click="toggleTheme" circle title="切换主题" />
-      <el-button :icon="Setting" @click="openSettingsDialog" circle title="设置" />
+      <el-button type="primary" plain title="Workflows" @click="openWorkflowManager">Workflows</el-button>
+      <el-button :icon="isDarkMode ? Moon : Sunny" @click="toggleTheme" circle title="Toggle Theme" />
+      <el-button :icon="Setting" @click="openSettingsDialog" circle title="Settings" />
     </div>
   </header>
 </template>
@@ -89,4 +88,4 @@ function openIdeasWorkbench() {
   display: flex;
   gap: 15px;
 }
-</style> 
+</style>

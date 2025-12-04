@@ -9,7 +9,7 @@ import { Edit, Delete as DeleteIcon, ArrowDown, ArrowUp, Document, Setting } fro
 import { getCardTypes, type CardTypeRead } from '@renderer/api/cards'
 
 onMounted(() => { document.title = 'Workflow Studio - Novel Forge' })
-// 节点工具栏：统一响应删除
+// Node toolbar: Unified delete response
 if (typeof window !== 'undefined') {
   window.addEventListener('wf-node-delete', (e: any) => {
     const id = e?.detail?.id
@@ -39,8 +39,8 @@ let resizing = false
 let startX = 0
 let startW = 320
 const ctxMenu = ref<{ visible: boolean; x: number; y: number }>({ visible: false, x: 0, y: 0 })
-const jsonPanelCollapsed = ref(true) // JSON面板折叠状态
-const jsonPanelHeight = ref(200) // JSON面板高度
+const jsonPanelCollapsed = ref(true) // JSON panel collapse state
+const jsonPanelHeight = ref(200) // JSON panel height
 
 function onNodeContext(e: any) {
   try {
@@ -55,7 +55,7 @@ function toggleJsonPanel() {
   jsonPanelCollapsed.value = !jsonPanelCollapsed.value
 }
 
-// 美化JSON显示
+// Beautify JSON display
 const formattedDsl = computed(() => {
   try {
     return JSON.stringify(dsl.value, null, 2)
@@ -78,13 +78,13 @@ async function select(id: number) {
     triggers.value = (await listWorkflowTriggers()).filter(t => t.workflow_id === id)
   } catch {}
 
-  // 若首节点为 Card.Read 且未设置 type_name，则用预览类型（或默认“世界观设定”）补齐，便于后续字段解析
+  // If first node is Card.Read and type_name not set, fill with preview type (or default "WorldSetting") for field parsing
   try {
     const nodes: any[] = Array.isArray(dsl.value.nodes) ? dsl.value.nodes : []
     const firstRead = nodes.find(n => n?.type === 'Card.Read')
     const typeFromDsl = firstRead?.params?.type_name
     const typeFromTrigger = (triggers.value.find(t => !!t.card_type_name)?.card_type_name) as string | undefined
-    const smart = (wf.name || '').includes('世界观') ? '世界观设定' : undefined
+    const smart = (wf.name || '').includes('WorldSetting') ? 'WorldSetting' : undefined
     const decided = typeFromDsl || typeFromTrigger || smart || ''
     if (firstRead) {
       firstRead.params = { ...(firstRead.params || {}), type_name: (firstRead.params?.type_name || decided) }
@@ -110,12 +110,12 @@ async function save() {
   if (!Number.isFinite(wid)) return
   try {
     await updateWorkflow(wid, { definition_json: dsl.value })
-    // 重新读取以确认后端已持久化
+    // Reload to confirm backend persistence
     const wf = await getWorkflow(wid)
     dsl.value = wf.definition_json || dsl.value
-    ElMessage.success('已保存')
+    ElMessage.success('Saved')
   } catch (e:any) {
-    ElMessage.error('保存失败')
+    ElMessage.error('Save failed')
     console.error(e)
   }
 }
@@ -139,13 +139,13 @@ async function removeSelected() {
   const wid = Number(selectedId.value)
   if (!Number.isFinite(wid)) return
   try {
-    await ElMessageBox.confirm('确认删除该工作流？此操作不可恢复', '删除确认', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
+    await ElMessageBox.confirm('Confirm delete this workflow? This action cannot be undone', 'Delete Confirmation', { confirmButtonText: 'Delete', cancelButtonText: 'Cancel', type: 'warning' })
   } catch { return }
   await deleteWorkflow(wid)
   selectedId.value = null
   dsl.value = { nodes: [] }
   await loadList()
-  ElMessage.success('已删除')
+  ElMessage.success('Deleted')
 }
 
 async function validateNow() {
@@ -163,7 +163,7 @@ function onNodeSelected(node: any) {
 }
 
 function updateParams(next: any) {
-  // 将右侧面板的参数写回 DSL（支持顶层与 body 递归）
+  // Write back params from right panel to DSL (support top-level and body recursion)
   if (!selectedNode.value) return
   const id = String(selectedNode.value.id || '')
   // no-op debug log removed
@@ -180,7 +180,7 @@ function updateParams(next: any) {
         return true
       }
       if (Array.isArray(n?.body)) {
-        // 子节点用自身 id 做匹配，不再用绘制时拼出来的 id
+        // Child nodes match by own id, not id constructed during render
         for (let k = 0; k < n.body.length; k++) {
           const bn = n.body[k]
           const bid = String(bn?.id || `${n.id || `n${i}`}-b${k}`)
@@ -210,7 +210,7 @@ function startResize(e: MouseEvent) {
   const onMove = (ev: MouseEvent) => {
     if (!resizing) return
     const dx = ev.clientX - startX
-    // 面板位于右侧，拖拽左侧边缘：向左拖应增宽，向右拖应变窄
+    // Panel on right, drag left edge: drag left increases width, drag right decreases
     let w = startW - dx
     if (w < 260) w = 260
     if (w > 560) w = 560
@@ -227,7 +227,7 @@ function startResize(e: MouseEvent) {
 
 function insertNode(spec: any) {
   try {
-    // 确保DSL是标准格式
+    // Ensure DSL is standard format
     if (!Array.isArray(dsl.value.edges)) {
       convertDslToStandardFormat()
     }
@@ -237,7 +237,7 @@ function insertNode(spec: any) {
     
     const nodeId = `n${Date.now()}`
     
-    // 使用传入的精确位置，或者默认位置
+    // Use passed exact position or default
     const position = spec.position || {
       x: 40 + nodes.length * 240,
       y: 80
@@ -250,14 +250,14 @@ function insertNode(spec: any) {
       position
     }
     
-    // 简单添加节点，不自动创建连接或子节点
+    // Simply add node, no auto connection or child node
     nodes.push(newNode)
     
     dsl.value = { ...(dsl.value || {}), nodes, edges }
     pendingInsertIndex.value = null
     pendingBelowOf = null
     
-    // 选中新创建的节点
+    // Select newly created node
     nextTick(() => {
       selectedNode.value = { id: nodeId, type: newNode.type, params: newNode.params }
     })
@@ -266,20 +266,20 @@ function insertNode(spec: any) {
   }
 }
 
-// 将DSL转换为标准格式
+// Convert DSL to standard format
 function convertDslToStandardFormat() {
-  if (Array.isArray(dsl.value.edges)) return // 已经是标准格式
+  if (Array.isArray(dsl.value.edges)) return // Already standard format
   
   const nodes: any[] = Array.isArray(dsl.value.nodes) ? dsl.value.nodes : []
   const edges: any[] = []
   
-  // 为现有节点添加位置信息并生成连线
+  // Add position info and generate edges for existing nodes
   nodes.forEach((node: any, index: number) => {
     if (!node.position) {
       node.position = { x: 40 + index * 240, y: 80 }
     }
     
-    // 为相邻节点生成连线（简化处理）
+    // Generate edges for adjacent nodes (simplified)
     if (index > 0) {
       edges.push({
         id: `e-${nodes[index-1].id}-${node.id}`,
@@ -303,23 +303,23 @@ function handleRequestInsert(payload: any) {
 
 function getTriggerLabel(triggerOn: string) {
   const labels: Record<string, string> = {
-    'onsave': '保存时触发',
-    'ongenfinish': '生成完成时触发',
-    'manual': '手动触发',
-    'onprojectcreate': '创建项目时触发'
+    'onsave': 'Trigger on Save',
+    'ongenfinish': 'Trigger on Gen Finish',
+    'manual': 'Manual Trigger',
+    'onprojectcreate': 'Trigger on Project Create'
   }
   return labels[triggerOn] || triggerOn
 }
 
 function openNodeLibAt(payload: any) {
   if (payload?.newNodeType) {
-    // 拖拽创建：使用传递的位置信息
+    // Drag create: Use passed position
     insertNode({ 
       type: payload.newNodeType,
       position: payload.position
     })
   } else {
-    // 右键菜单创建：使用索引计算位置
+    // Right click create: Use index to calc position
     const index = Math.max(0, Math.min(Number(payload?.index ?? (dsl.value?.nodes || []).length), (dsl.value?.nodes || []).length))
     pendingInsertIndex.value = index
     pendingBelowOf = payload?.placement === 'below' ? String(payload?.anchorId || '') : null
@@ -374,13 +374,13 @@ function deleteSelectedNode() {
       <div class="header-left">
         <div class="title">
           <el-icon><Setting /></el-icon>
-          <h2>工作流工作室</h2>
+          <h2>Workflow Studio</h2>
         </div>
-        <div class="subtitle">可视化编辑和管理工作流程</div>
+        <div class="subtitle">Visually edit and manage workflows</div>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Document" @click="save" :disabled="!selectedId">保存工作流</el-button>
-        <el-button @click="createNew">新建工作流</el-button>
+        <el-button type="primary" :icon="Document" @click="save" :disabled="!selectedId">Save Workflow</el-button>
+        <el-button @click="createNew">New Workflow</el-button>
       </div>
     </div>
 
@@ -388,8 +388,8 @@ function deleteSelectedNode() {
       <!-- Left Sidebar -->
       <div class="sidebar">
         <div class="sidebar-header">
-          <h3>工作流列表</h3>
-          <el-tag size="small" type="info">{{ workflows.length }} 个</el-tag>
+          <h3>Workflow List</h3>
+          <el-tag size="small" type="info">{{ workflows.length }}</el-tag>
         </div>
         <el-scrollbar class="workflow-list">
           <div 
@@ -402,7 +402,7 @@ function deleteSelectedNode() {
             <div class="workflow-main">
               <div class="workflow-name">{{ w.name }}</div>
               <div class="workflow-badges">
-                <el-tag v-if="w.is_built_in" size="small" type="primary">内置</el-tag>
+                <el-tag v-if="w.is_built_in" size="small" type="primary">Built-in</el-tag>
                 <el-tag size="small" effect="plain">v{{ w.version }}</el-tag>
               </div>
             </div>
@@ -420,12 +420,12 @@ function deleteSelectedNode() {
         <div class="content-toolbar">
           <div class="toolbar-section">
             <el-button-group>
-              <el-button @click="validateNow" :disabled="!selectedId">校验</el-button>
-              <el-button type="danger" @click="removeSelected" :disabled="!selectedId">删除</el-button>
+              <el-button @click="validateNow" :disabled="!selectedId">Validate</el-button>
+              <el-button type="danger" @click="removeSelected" :disabled="!selectedId">Delete</el-button>
             </el-button-group>
             <el-alert 
               v-if="errors.length" 
-              :title="`发现 ${errors.length} 个错误`" 
+              :title="`Found ${errors.length} errors`"
               type="error" 
               size="small"
               show-icon
@@ -435,14 +435,14 @@ function deleteSelectedNode() {
           
           <div class="toolbar-section">
             <div class="config-group">
-              <span class="config-label">预览卡片类型</span>
-              <el-select v-model="previewTypeName" size="small" placeholder="选择类型" style="width: 180px">
+              <span class="config-label">Preview Card Type</span>
+              <el-select v-model="previewTypeName" size="small" placeholder="Select Type" style="width: 180px">
                 <el-option v-for="t in cardTypes" :key="t.id" :label="t.name" :value="t.name" />
               </el-select>
             </div>
             
             <div class="config-group">
-              <span class="config-label">触发器</span>
+              <span class="config-label">Triggers</span>
               <div class="triggers-list">
                 <el-tag 
                   v-for="tg in triggers" 
@@ -456,7 +456,7 @@ function deleteSelectedNode() {
                 </el-tag>
                 <el-button size="small" type="primary" plain @click="openCreateTrigger">
                   <el-icon><Edit /></el-icon>
-                  添加触发器
+                  Add Trigger
                 </el-button>
               </div>
             </div>
@@ -476,9 +476,9 @@ function deleteSelectedNode() {
           
           <div class="param-container" :style="{ width: paramWidth + 'px' }">
             <div class="param-header">
-              <h4>节点参数</h4>
+              <h4>Node Params</h4>
               <span v-if="selectedNode" class="selected-node-type">{{ selectedNode.type || 'Unknown' }}</span>
-              <span v-else class="no-selection">未选择节点</span>
+              <span v-else class="no-selection">No Node Selected</span>
             </div>
             <WorkflowParamPanel 
               class="param-panel" 
@@ -496,10 +496,10 @@ function deleteSelectedNode() {
           <div class="json-header" @click="toggleJsonPanel">
             <div class="json-title">
               <el-icon><Document /></el-icon>
-              <span>DSL 检查器</span>
+              <span>DSL Inspector</span>
             </div>
             <div class="json-actions">
-              <el-tag size="small" type="info">{{ Object.keys(dsl.nodes || []).length }} 个节点</el-tag>
+              <el-tag size="small" type="info">{{ Object.keys(dsl.nodes || []).length }} nodes</el-tag>
               <el-icon class="collapse-icon" :class="{ expanded: !jsonPanelCollapsed }">
                 <ArrowUp />
               </el-icon>
@@ -519,59 +519,59 @@ function deleteSelectedNode() {
       <el-card shadow="hover" class="ctx-card">
         <div class="ctx-item" @click="deleteSelectedNode">
           <el-icon><DeleteIcon/></el-icon>
-          <span>删除节点</span>
+          <span>Delete Node</span>
         </div>
       </el-card>
     </div>
 
     <!-- Trigger Dialog -->
-    <el-dialog v-model="triggerDialogVisible" title="触发器配置" width="450px">
+    <el-dialog v-model="triggerDialogVisible" title="Trigger Config" width="450px">
       <el-form label-width="100px" size="default">
-        <el-form-item label="触发时机">
-          <el-select v-model="(editingTrigger as any).trigger_on" placeholder="选择触发时机">
-            <el-option label="保存时触发" value="onsave" />
-            <el-option label="生成完成时触发" value="ongenfinish" />
-            <el-option label="手动触发" value="manual" />
-            <el-option label="创建项目时触发" value="onprojectcreate" />
+        <el-form-item label="Trigger Timing">
+          <el-select v-model="(editingTrigger as any).trigger_on" placeholder="Select Trigger Timing">
+            <el-option label="Trigger on Save" value="onsave" />
+            <el-option label="Trigger on Gen Finish" value="ongenfinish" />
+            <el-option label="Manual Trigger" value="manual" />
+            <el-option label="Trigger on Project Create" value="onprojectcreate" />
           </el-select>
         </el-form-item>
         <el-form-item 
-          label="卡片类型" 
+          label="Card Type"
           v-show="(editingTrigger as any)?.trigger_on !== 'onprojectcreate'"
         >
-          <el-input v-model="(editingTrigger as any).card_type_name" placeholder="留空表示所有类型" />
+          <el-input v-model="(editingTrigger as any).card_type_name" placeholder="Empty means all types" />
           <template #append>
-            <span style="color: var(--el-text-color-secondary); font-size: 12px;">可选</span>
+            <span style="color: var(--el-text-color-secondary); font-size: 12px;">Optional</span>
           </template>
         </el-form-item>
-        <el-form-item label="启用状态">
+        <el-form-item label="Enabled">
           <el-switch v-model="(editingTrigger as any).is_active" />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="triggerDialogVisible=false">取消</el-button>
-          <el-button type="primary" @click="saveTrigger">保存触发器</el-button>
+          <el-button @click="triggerDialogVisible=false">Cancel</el-button>
+          <el-button type="primary" @click="saveTrigger">Save Trigger</el-button>
         </div>
       </template>
     </el-dialog>
 
     <!-- Create Workflow Dialog -->
-    <el-dialog v-model="createDialogVisible" title="新建工作流" width="450px">
+    <el-dialog v-model="createDialogVisible" title="New Workflow" width="450px">
       <el-form label-width="80px" size="default">
-        <el-form-item label="名称" required>
+        <el-form-item label="Name" required>
           <el-input 
             v-model="newWorkflowName" 
-            placeholder="请输入工作流名称" 
+            placeholder="Please enter workflow name"
             @keyup.enter="confirmCreate"
           />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="createDialogVisible=false">取消</el-button>
+          <el-button @click="createDialogVisible=false">Cancel</el-button>
           <el-button type="primary" @click="confirmCreate" :disabled="!newWorkflowName.trim()">
-            创建工作流
+            Create Workflow
           </el-button>
         </div>
       </template>

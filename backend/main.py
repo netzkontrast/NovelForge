@@ -26,7 +26,7 @@ from app.api.router import api_router
 from app.db.session import engine
 from app.db import models
 from app.bootstrap.init_app import init_prompts, create_default_card_types
-# 知识库初始化
+# Knowledge Base Initialization
 from app.bootstrap.init_app import init_knowledge
 from app.bootstrap.init_app import init_reserved_project
 from app.bootstrap.init_app import init_workflows
@@ -34,30 +34,30 @@ from app.bootstrap.init_app import init_workflows
 def init_db():
     models.SQLModel.metadata.create_all(engine)
 
-# 创建所有表
+# Create all tables
 # models.Base.metadata.create_all(bind=engine)
 
 from contextlib import asynccontextmanager
 
-# 使用 lifespan 事件处理器替代 on_event
+# Use lifespan event handler instead of on_event
 @asynccontextmanager
 async def lifespan(app):
-    # 启动时执行
-    # 确保所有表存在（开发阶段可用；生产建议通过 Alembic 迁移）
+    # Run on startup
+    # Ensure all tables exist (Available for development; production suggests migration via Alembic)
     models.SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         init_prompts(session)
         create_default_card_types(session)
-        # 初始化知识库
+        # Initialize Knowledge Base
         init_knowledge(session)
-        # 初始化保留项目
+        # Initialize reserved project
         init_reserved_project(session)
-        # 初始化内置工作流
+        # Initialize built-in workflows
         init_workflows(session)
     yield
-    # 关闭时可添加清理逻辑（如有需要）
+    # Cleanup logic can be added on shutdown (if needed)
 
-# 创建 FastAPI 应用实例，注册 lifespan
+# Create FastAPI app instance, register lifespan
 app = FastAPI(
     title="NovelForge API",
     version="1.0.0",
@@ -67,18 +67,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 设置CORS中间件，允许所有来源的请求
-# 这在开发环境中很方便，但在生产环境中应该更严格
+# Set CORS middleware, allow requests from all origins
+# This is convenient in development, but should be stricter in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许所有来源
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
-    allow_methods=["*"],  # 允许所有方法
-    allow_headers=["*"],  # 允许所有头部
-    expose_headers=["X-Workflows-Started"],  # 允许浏览器读取此自定义响应头
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["X-Workflows-Started"],  # Allow browser to read this custom response header
 )
 
-# 包含API路由
+# Include API routes
 app.include_router(api_router, prefix="/api")
 
 
@@ -88,8 +88,8 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    # 添加reload=True，这样当代码修改时会自动重新加载
-    # 配置更短的优雅关闭时间，便于 Ctrl+C 快速退出
+    # Add reload=True, so that when code is modified it will automatically reload
+    # Configure shorter graceful shutdown time, easy to exit quickly with Ctrl+C
     uvicorn.run(
         "main:app",
         host="127.0.0.1",

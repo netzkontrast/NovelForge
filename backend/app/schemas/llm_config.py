@@ -8,7 +8,7 @@ class LLMConfigBase(SQLModel):
     model_name: str
     api_base: Optional[str] = None
     api_key: Optional[str] = None
-    # 配额（-1 表示不限）与统计（只读场景外部可见）
+    # Quota (-1 means unlimited) and statistics (visible externally in read-only scenarios)
     token_limit: Optional[int] = -1
     call_limit: Optional[int] = -1
     rpm_limit: Optional[int] = -1
