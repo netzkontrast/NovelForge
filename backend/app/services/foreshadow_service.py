@@ -14,10 +14,10 @@ class ForeshadowService:
 
     def suggest(self, text: str) -> Dict[str, Any]:
         """
-        极简启发式：
-        - 捕捉“将要/准备/打算/誓要/必须”等后接短语作为待完成目标
-        - 捕捉以『剑/刀/戒/符/印/丹/阵/甲/鼎/珠/镜』为后缀的名词作为可疑道具
-        - 粗略抽取2-4字的人名候选（排除常见功能词）
+        Minimal heuristic:
+        - Capture phrases after "will/prepare/plan/vow/must" as pending goals
+        - Capture nouns ending with 'sword/knife/ring/talisman/seal/pill/array/armor/cauldron/bead/mirror' as suspicious items
+        - Roughly extract 2-4 character names (excluding common function words)
         """
         if not isinstance(text, str):
             text = str(text or "")
@@ -25,19 +25,19 @@ class ForeshadowService:
         items: List[str] = []
         persons: List[str] = []
 
-        # 目标
+        # Goals
         for m in re.findall(r"(将要|准备|打算|誓要|必须)([^。？！\n]{2,20})", text):
             frag = (m[0] + m[1]).strip()
             if frag and frag not in goals:
                 goals.append(frag)
 
-        # 道具
+        # Items
         for m in re.findall(r"([\u4e00-\u9fa5]{1,8})(剑|刀|戒|符|印|丹|阵|甲|鼎|珠|镜)", text):
             frag = (m[0] + m[1]).strip()
             if frag and frag not in items:
                 items.append(frag)
 
-        # 人名（粗略）
+        # Names (Rough)
         stopwords = {"什么", "但是", "因为", "然后", "虽然", "可是", "不会", "看看", "我们", "你们", "他们", "以及"}
         for m in re.findall(r"([\u4e00-\u9fa5]{2,4})", text):
             if m and 2 <= len(m) <= 4 and m not in stopwords:

@@ -1,6 +1,6 @@
 """
-灵感助手专用接口
-支持工具调用的对话
+Inspiration Assistant dedicated endpoints
+Support conversation with tool calls
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/assistant", tags=["assistant"])
 
 
 async def stream_wrapper(generator):
-    """将纯文本流包装为SSE格式"""
+    """Wrap plain text stream into SSE format"""
     async for item in generator:
         yield f"data: {json.dumps({'content': item}, ensure_ascii=False)}\n\n"
 
@@ -29,33 +29,33 @@ async def assistant_chat(
     session: Session = Depends(get_session)
 ):
     """
-    灵感助手对话接口（支持工具调用）
+    Inspiration Assistant Chat Interface (Supports Tool Calling)
     
-    特点：
-    - 专用请求模型（语义清晰）
-    - 自动注入工具集
-    - 支持流式输出
-    - 支持工具调用结果返回
+    Features:
+    - Dedicated request model (clear semantics)
+    - Auto-inject toolset
+    - Supports streaming output
+    - Supports tool execution result return
     """
-    # 加载系统提示词（根据模式选择不同的提示词）
+    # Load system prompt (select different prompt based on mode)
     from app.services import prompt_service
     
     prompt_name = request.prompt_name
     if request.use_react_mode and request.prompt_name == "灵感对话":
-        # ReAct 模式使用专用提示词
+        # ReAct mode uses dedicated prompt
         prompt_name = "灵感对话-React"
     
     p = prompt_service.get_prompt_by_name(session, prompt_name)
     if not p or not p.template:
-        raise HTTPException(status_code=400, detail=f"未找到提示词: {prompt_name}")
+        raise HTTPException(status_code=400, detail=f"Prompt not found: {prompt_name}")
     
     system_prompt = str(p.template)
     
-    # 根据模式选择生成函数
+    # Select generation function based on mode
     async def stream_with_tools() -> AsyncGenerator[str, None]:
         if request.use_react_mode:
-            # ReAct 模式：文本格式工具调用
-            logger.info(f"[Assistant API] 使用 ReAct 模式")
+            # ReAct Mode: Text format tool calling
+            logger.info(f"[Assistant API] Using ReAct Mode")
             async for chunk in generate_assistant_chat_streaming_react(
                 session=session,
                 request=request,
@@ -64,8 +64,8 @@ async def assistant_chat(
             ):
                 yield chunk
         else:
-            # 标准模式：原生 Function Calling
-            logger.info(f"[Assistant API] 使用标准模式（Function Calling）")
+            # Standard Mode: Native Function Calling
+            logger.info(f"[Assistant API] Using Standard Mode (Function Calling)")
             from app.services.assistant_tools.pydantic_ai_tools import ASSISTANT_TOOLS, AssistantDeps
             
             deps = AssistantDeps(session=session, project_id=request.project_id)

@@ -9,20 +9,20 @@
         </el-breadcrumb-item>
       </el-breadcrumb>
       <el-tag :type="statusTag.type" size="small">{{ statusTag.label }}</el-tag>
-      <span v-if="lastSavedAt" class="last-saved">上次保存：{{ lastSavedAt }}</span>
+      <span v-if="lastSavedAt" class="last-saved">Last saved: {{ lastSavedAt }}</span>
     </div>
     <div class="right">
-      <el-tooltip content="打开上下文抽屉（Alt+K）">
-        <el-button type="primary" plain @click="$emit('open-context')">上下文注入</el-button>
+      <el-tooltip content="Open Context Drawer (Alt+K)">
+        <el-button type="primary" plain @click="$emit('open-context')">Context Injection</el-button>
       </el-tooltip>
-      <el-button v-if="!isChapterContent" type="success" plain @click="$emit('generate')">AI 生成</el-button>
-      <el-button type="primary" :disabled="!canSave" :loading="saving" @click="$emit('save')">保存</el-button>
+      <el-button v-if="!isChapterContent" type="success" plain @click="$emit('generate')">AI Generate</el-button>
+      <el-button type="primary" :disabled="!canSave" :loading="saving" @click="$emit('save')">Save</el-button>
       <el-dropdown>
-        <el-button text>更多</el-button>
+        <el-button text>More</el-button>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click="$emit('open-versions')">历史版本</el-dropdown-item>
-            <el-dropdown-item divided type="danger" @click="$emit('delete')">删除</el-dropdown-item>
+            <el-dropdown-item @click="$emit('open-versions')">History Versions</el-dropdown-item>
+            <el-dropdown-item divided type="danger" @click="$emit('delete')">Delete</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -51,9 +51,9 @@ watch(() => props.title, v => titleProxy.value = v)
 watch(titleProxy, v => emit('update:title', v))
 
 const statusTag = computed(() => {
-  if (props.saving) return { type: 'warning', label: '保存中' }
-  if (props.dirty) return { type: 'info', label: '未保存' }
-  return { type: 'success', label: '已保存' }
+  if (props.saving) return { type: 'warning', label: 'Saving' }
+  if (props.dirty) return { type: 'info', label: 'Unsaved' }
+  return { type: 'success', label: 'Saved' }
 })
 </script>
 
@@ -65,10 +65,10 @@ const statusTag = computed(() => {
   padding: 8px 12px; 
   border-bottom: 1px solid var(--el-border-color-light); 
   background: var(--el-bg-color);
-  flex-shrink: 0; /* 固定：防止被压缩 */
+  flex-shrink: 0; /* Fixed: prevent shrinking */
 }
 .left { display: flex; align-items: center; gap: 10px; }
 .right { display: flex; align-items: center; gap: 8px; }
 .title-input { width: 280px; }
 .last-saved { color: var(--el-text-color-secondary); font-size: 12px; }
-</style> 
+</style>

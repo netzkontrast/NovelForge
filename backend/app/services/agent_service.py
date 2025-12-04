@@ -26,33 +26,33 @@ from datetime import datetime
 from app.schemas.wizard import StageLine, ChapterOutline, Chapter
 import re
 
-# 从环境变量读取工具调用最大重试次数，默认为 3
+# Read max tool call retries from env, default 3
 MAX_TOOL_CALL_RETRIES = int(os.getenv('MAX_TOOL_CALL_RETRIES', '3'))
 
 _TOKEN_REGEX = re.compile(
     r"""
-    ([A-Za-z]+)               # 英文单词（连续字母算 1）
-    |([0-9])                 # 1个数字算 1
-    |([\u4E00-\u9FFF])       # 单个中文汉字算 1
-    |(\S)                     # 其它非空白符号/标点算 1
+    ([A-Za-z]+)               # English word (consecutive letters count as 1)
+    |([0-9])                 # 1 digit counts as 1
+    |([\u4E00-\u9FFF])       # Single Chinese char counts as 1
+    |(\S)                     # Other non-whitespace symbol/punctuation counts as 1
     """,
     re.VERBOSE,
 )
 
 def _estimate_tokens(text: str) -> int:
-    """按规则估算 token：
-    - 1 个中文 = 1
-    - 1 个英文单词 = 1
-    - 1 个数字 = 1
-    - 1 个符号 = 1
-    空白不计。
+    """Estimate tokens by rule:
+    - 1 Chinese char = 1
+    - 1 English word = 1
+    - 1 digit = 1
+    - 1 symbol = 1
+    Whitespace ignored.
     """
     if not text:
         return 0
     try:
         return sum(1 for _ in _TOKEN_REGEX.finditer(text))
     except Exception:
-        # 退化：按非空白字符计数
+        # Fallback: Count non-whitespace chars
         return sum(1 for ch in (text or "") if not ch.isspace())
 
 from app.services import llm_config_service as _llm_svc
@@ -85,21 +85,21 @@ def _get_agent(
     deps_type: Type = str,
     tools: list = None,) -> Agent:
     """
-    根据LLM配置和期望的输出类型，获取一个配置好的LLM Agent实例。
-    统一使用 ModelSettings 设置 temperature/max_tokens/timeout（无需按提供商分支分别设置）。
+    Get a configured LLM Agent instance based on LLM config and expected output type.
+    Unified use of ModelSettings to set temperature/max_tokens/timeout.
     
-    - deps_type: 依赖注入类型（默认 str）
-    - tools: 工具列表（Pydantic AI Tool 对象）
-    - output_type: 输出类型（None 表示允许文本和工具调用）
+    - deps_type: Dependency injection type (default str)
+    - tools: Tool list (Pydantic AI Tool objects)
+    - output_type: Output type (None means allow text and tool calls)
     """
     llm_config = llm_config_service.get_llm_config(session, llm_config_id)
     if not llm_config:
-        raise ValueError(f"LLM配置不存在，ID: {llm_config_id}")
+        raise ValueError(f"LLM Config not found, ID: {llm_config_id}")
 
     if not llm_config.api_key:
-        raise ValueError(f"未找到LLM配置 {llm_config.display_name or llm_config.model_name} 的API密钥")
+        raise ValueError(f"API Key not found for LLM Config {llm_config.display_name or llm_config.model_name}")
     print(f"=======llm_config.provider:{llm_config.provider}=========")
-    # Provider & Model 创建（不再在此处设置温度/超时）
+    # Provider & Model Creation (No longer set temperature/timeout here)
     if llm_config.provider == "openai":
         provider_config = {"api_key": llm_config.api_key}
         if llm_config.api_base:
@@ -123,9 +123,9 @@ def _get_agent(
         provider = OpenAIProvider(**provider_config)
         model = OpenAIChatModel(llm_config.model_name, provider=provider)
     else:
-        raise ValueError(f"不支持的提供商类型: {llm_config.provider}")
+        raise ValueError(f"Unsupported provider type: {llm_config.provider}")
 
-    # 统一的模型设置
+    # Unified model settings
     settings = ModelSettings(
         temperature=temperature,
         max_tokens=max_tokens,
@@ -133,9 +133,9 @@ def _get_agent(
         extra_body=None,
     )
 
-    # 创建 Agent（支持工具和自定义依赖类型）
+    # Create Agent (Supports tools and custom dependency types)
     if output_type is None:
-        # 不指定 output_type，默认允许文本输出和工具调用
+        # If output_type not specified, default allow text output and tool calls
         agent = Agent(
             model, 
             system_prompt=system_prompt, 
@@ -144,7 +144,7 @@ def _get_agent(
             tools=tools or []
         )
     else:
-        # 指定了 output_type，使用 Union[output_type, str] 允许文本回退
+        # If output_type specified, use Union[output_type, str] to allow text fallback
         agent = Agent(
             model, 
             system_prompt=system_prompt, 
@@ -159,8 +159,8 @@ def _get_agent(
 
 async def run_agent_with_streaming(agent: Agent, *args, **kwargs):
     """
-    使用 agent.iter() 和 node.stream() 迭代获取每个流式响应块内容，
-    然后返回最终的完整结果。避免直接返回结果时出现网络波动导致生成失败
+    Iterate to get each streaming response block content using agent.iter() and node.stream(),
+    then return the final complete result. Avoid generation failure due to network fluctuation when returning result directly
     """
     async with agent.run_stream(*args, **kwargs) as stream:
         return await stream.get_output()
@@ -200,23 +200,23 @@ async def execute_react_tool(
     deps: Any,
     tools_map: Dict[str, Callable]) -> Dict[str, Any]:
     """
-    执行 ReAct 模式的工具调用
+    Execute tool call in ReAct mode
     
     Args:
-        tool_name: 工具名称
-        tool_args: 工具参数
-        deps: 依赖上下文
-        tools_map: 工具函数映射表
+        tool_name: Tool name
+        tool_args: Tool arguments
+        deps: Dependency context
+        tools_map: Tool function mapping
         
     Returns:
-        工具执行结果 {"tool_name": str, "args": dict, "result": Any, "success": bool, "error": Optional[str]}
+        Tool execution result {"tool_name": str, "args": dict, "result": Any, "success": bool, "error": Optional[str]}
     """
-    logger.info(f"🔧 [ReAct] 执行工具: {tool_name}")
-    logger.info(f"   参数: {json.dumps(tool_args, ensure_ascii=False)[:200]}...")
+    logger.info(f"🔧 [ReAct] Executing tool: {tool_name}")
+    logger.info(f"   Arguments: {json.dumps(tool_args, ensure_ascii=False)[:200]}...")
     
-    # 验证工具名称
+    # Verify tool name
     if tool_name not in tools_map:
-        error_msg = f"未知工具: {tool_name}"
+        error_msg = f"Unknown tool: {tool_name}"
         logger.error(f"❌ [ReAct] {error_msg}")
         return {
             "tool_name": tool_name,
@@ -228,14 +228,14 @@ async def execute_react_tool(
     try:
         tool_func = tools_map[tool_name]
         
-        # 创建简单的上下文对象（兼容 Pydantic AI 工具签名）
+        # Create simple context object (Compatible with Pydantic AI tool signature)
         class SimpleContext:
             def __init__(self, deps):
                 self.deps = deps
         
         ctx = SimpleContext(deps=deps)
         
-        # 调用工具（检查是否需要 ctx 参数）
+        # Call tool (Check if ctx parameter is needed)
         import inspect
         sig = inspect.signature(tool_func)
         if 'ctx' in sig.parameters:
@@ -243,7 +243,7 @@ async def execute_react_tool(
         else:
             result = tool_func(**tool_args)
         
-        logger.info(f"✅ [ReAct] 工具执行成功: {tool_name}")
+        logger.info(f"✅ [ReAct] Tool executed successfully: {tool_name}")
         
         return {
             "tool_name": tool_name,
@@ -253,7 +253,7 @@ async def execute_react_tool(
         }
     
     except Exception as e:
-        error_msg = f"工具执行失败: {str(e)}"
+        error_msg = f"Tool execution failed: {str(e)}"
         logger.error(f"❌ [ReAct] {error_msg}", exc_info=True)
         return {
             "tool_name": tool_name,
@@ -271,55 +271,55 @@ async def process_react_text(
     deps: Any,
     react_tools_map: Dict[str, Callable]) -> AsyncGenerator[Union[str, tuple], None]:
     """
-    处理 ReAct 模式的文本：检测工具调用、执行工具、输出文本
+    Process ReAct mode text: Detect tool calls, execute tools, output text
     
     Args:
-        text: 当前文本块
-        react_accumulated_text: 累积的文本
-        react_processed_calls: 已处理的工具调用位置列表
-        tool_calls_info: 工具调用信息列表
-        deps: 依赖上下文
-        react_tools_map: 工具函数映射表
+        text: Current text block
+        react_accumulated_text: Accumulated text
+        react_processed_calls: List of processed tool call positions
+        tool_calls_info: List of tool call info
+        deps: Dependency context
+        react_tools_map: Tool function mapping
         
     Yields:
-        - str: 协议标记和文本内容
-        - tuple: 最后一个 yield 返回 (updated_accumulated_text, new_tool_count) 元组
+        - str: Protocol markers and text content
+        - tuple: Last yield returns (updated_accumulated_text, new_tool_count) tuple
     """
-    # 累积文本
+    # Accumulate text
     react_accumulated_text += text
     new_tool_count = 0
     
-    # 检测并处理工具调用
+    # Detect and process tool calls
     tool_call_pattern = re.compile(r'<tool_call>(.*?)</tool_call>', re.DOTALL)
     
     for match in tool_call_pattern.finditer(react_accumulated_text):
         match_key = (match.start(), match.end())
         
-        # 避免重复处理
+        # Avoid duplicate processing
         if match_key in react_processed_calls:
             continue
         
         react_processed_calls.append(match_key)
-        logger.info(f"[ReAct] 检测到工具调用 (位置 {match.start()}-{match.end()})")
+        logger.info(f"[ReAct] Tool call detected (Position {match.start()}-{match.end()})")
         
-        # 通知前端工具调用开始
+        # Notify frontend tool call start
         yield "\n\n__TOOL_CALL_DETECTED__\n\n"
         
-        # 解析并执行工具
+        # Parse and execute tool
         try:
             tool_json = match.group(1).strip()
             try:
                 tool_call_data = json.loads(tool_json)
             except json.JSONDecodeError:
-                logger.warning(f"[ReAct] JSON 解析失败，尝试自动修复...")
+                logger.warning(f"[ReAct] JSON parse failed, attempting auto-repair...")
                 repaired_json = repair_json(tool_json)
                 tool_call_data = json.loads(repaired_json)
-                logger.info(f"[ReAct] JSON 修复成功")
+                logger.info(f"[ReAct] JSON repair success")
             
             tool_name = tool_call_data.get("name")
             tool_args = tool_call_data.get("args", {})
             
-            # 执行工具
+            # Execute tool
             tool_result = await execute_react_tool(
                 tool_name=tool_name,
                 tool_args=tool_args,
@@ -327,22 +327,22 @@ async def process_react_text(
                 tools_map=react_tools_map
             )
             
-            # 通知前端工具执行完成
+            # Notify frontend tool execution complete
             yield f"__TOOL_EXECUTED__:{json.dumps(tool_result, ensure_ascii=False)}\n\n"
             
-            # 记录工具调用
+            # Record tool call
             tool_calls_info.append(tool_result)
             new_tool_count += 1
             
         except Exception as e:
-            error_msg = f"工具调用处理失败: {str(e)}"
+            error_msg = f"Tool call processing failed: {str(e)}"
             logger.error(f"[ReAct] {error_msg}", exc_info=True)
             yield f"\n\n❌ {error_msg}\n\n"
     
-    # 输出文本（前端会过滤掉 <tool_call> 标记）
+    # Output text (Frontend will filter out <tool_call> tags)
     yield text
     
-    # 最后 yield 更新后的累积文本和新工具数量
+    # Finally yield updated accumulated text and new tool count
     yield (react_accumulated_text, new_tool_count)
 
 

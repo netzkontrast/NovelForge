@@ -8,7 +8,7 @@ from app.schemas.context import AssembleContextRequest, AssembleContextResponse
 
 router = APIRouter()
 
-@router.post("/assemble", response_model=AssembleContextResponse, summary="装配写作上下文（事实子图）")
+@router.post("/assemble", response_model=AssembleContextResponse, summary="Assemble writing context (fact subgraph)")
 def assemble(req: AssembleContextRequest, session: Session = Depends(get_session)):
     params = ContextAssembleParams(
         project_id=req.project_id,

@@ -25,24 +25,24 @@ router = APIRouter()
 
 @router.get("/workflow-node-types")
 def get_workflow_node_types():
-    """获取所有已注册的工作流节点类型"""
+    """Get all registered workflow node types"""
     node_types = get_node_types()
     
-    # 返回节点类型及其分类和描述
+    # Return node types, categories, and descriptions
     node_info = []
     for node_type in sorted(node_types):
         category = node_type.split('.')[0] if '.' in node_type else 'Other'
         node_name = node_type.split('.')[-1] if '.' in node_type else node_type
         
-        # 简单的描述映射
+        # Simple description mapping
         descriptions = {
-            'Card.Read': '读取卡片',
-            'Card.ModifyContent': '修改内容',
-            'Card.UpsertChildByTitle': '创建/更新子卡',
-            'Card.ClearFields': '清空字段',
-            'Card.ReplaceFieldText': '替换文本',
-            'List.ForEach': '遍历集合',
-            'List.ForEachRange': '遍历范围',
+            'Card.Read': 'Read Card',
+            'Card.ModifyContent': 'Modify Content',
+            'Card.UpsertChildByTitle': 'Create/Update Child Card',
+            'Card.ClearFields': 'Clear Fields',
+            'Card.ReplaceFieldText': 'Replace Text',
+            'List.ForEach': 'Iterate Collection',
+            'List.ForEachRange': 'Iterate Range',
         }
         
         node_info.append({
@@ -62,7 +62,7 @@ def list_workflows(session: Session = Depends(get_session)):
 
 @router.get("/workflow-triggers", response_model=List[WorkflowTriggerRead])
 def list_triggers(session: Session = Depends(get_session)):
-    """返回所有工作流触发器列表（独立资源路径，避免与 /workflows/{workflow_id} 冲突）。"""
+    """Return all workflow triggers (independent resource path, avoids conflict with /workflows/{workflow_id})."""
     items = session.exec(select(WorkflowTrigger)).all()
     return items
 
@@ -163,13 +163,13 @@ def validate_workflow(workflow_id: int, session: Session = Depends(get_session))
     dsl = wf.definition_json or {}
     raw_nodes = list((dsl.get("nodes") or []))
 
-    # 从节点注册表自动获取允许的节点类型
+    # Automatically get allowed node types from node registry
     allowed_types = set(get_node_types())
 
-    # 1) 规范化：补全/唯一化 id；将缺失 body 的 ForEach 折叠后一节点
+    # 1) Normalization: Complete/Uniquify id; fold next node for ForEach missing body
     canonical = wf_engine._canonicalize(raw_nodes)  # type: ignore[attr-defined]
 
-    # 为主线节点与 body 节点补全稳定 id；同时检查重复 id
+    # Complete stable id for main line nodes and body nodes; also check for duplicate id
     used_ids = set()
     auto_fixes: List[str] = []
     def _ensure_id(prefix: str, idx: int) -> str:
@@ -177,7 +177,7 @@ def validate_workflow(workflow_id: int, session: Session = Depends(get_session))
         if base not in used_ids:
             used_ids.add(base)
             return base
-        # 冲突时退避
+        # Backoff on conflict
         k = 1
         while f"{base}_{k}" in used_ids:
             k += 1
@@ -185,53 +185,53 @@ def validate_workflow(workflow_id: int, session: Session = Depends(get_session))
         used_ids.add(nid)
         return nid
 
-    # 先记录已有 id，随后为缺失 id 的节点补全
+    # Record existing ids first, then complete missing ids
     for n in canonical:
         nid = n.get("id")
         if isinstance(nid, str) and nid:
             if nid in used_ids:
-                auto_fixes.append(f"检测到重复 id={nid}，将自动重命名")
+                auto_fixes.append(f"Duplicate id={nid} detected, will be renamed automatically")
             used_ids.add(nid)
         for bn in (n.get("body") or []):
             bid = bn.get("id")
             if isinstance(bid, str) and bid:
                 if bid in used_ids:
-                    auto_fixes.append(f"检测到重复 id={bid}（body），将自动重命名")
+                    auto_fixes.append(f"Duplicate id={bid} (body) detected, will be renamed automatically")
                 used_ids.add(bid)
 
     for i, n in enumerate(canonical):
         if not n.get("id"):
             n["id"] = _ensure_id("n", i)
-            auto_fixes.append(f"主线节点#{i} 缺少 id，已自动补全为 {n['id']}")
+            auto_fixes.append(f"Main node #{i} missing id, auto-completed as {n['id']}")
         body = list((n.get("body") or []))
         for k, bn in enumerate(body):
             if not bn.get("id"):
                 bn_id = _ensure_id(f"{n['id']}-b", k)
                 bn["id"] = bn_id
-                auto_fixes.append(f"body 节点 {n['id']}[{k}] 缺少 id，已补全为 {bn_id}")
+                auto_fixes.append(f"Body node {n['id']}[{k}] missing id, auto-completed as {bn_id}")
         if body:
             n["body"] = body
 
-    # 2) 规则校验
+    # 2) Rule validation
     errors: List[str] = []
     warnings: List[str] = []
     for i, n in enumerate(canonical):
         t = n.get("type")
         if t not in allowed_types:
-            errors.append(f"Node#{i} 使用了不支持的类型: {t}")
-        # ForEach 系列要求 body 存在（canonicalize 已尝试折叠修复）
+            errors.append(f"Node#{i} uses unsupported type: {t}")
+        # ForEach series requires body (canonicalize has attempted fold repair)
         if t in ("List.ForEach", "List.ForEachRange"):
             if not n.get("body"):
-                errors.append(f"Node#{i}({t}) 缺少 body")
-            # 基础参数检查
+                errors.append(f"Node#{i}({t}) missing body")
+            # Basic parameter check
             p = n.get("params") or {}
             if t == "List.ForEach" and not p.get("listPath") and not p.get("list"):
-                warnings.append(f"Node#{i}(List.ForEach) 建议提供 listPath 或 list 参数")
+                warnings.append(f"Node#{i}(List.ForEach) suggests providing listPath or list parameter")
             if t == "List.ForEachRange":
                 start = p.get("start")
                 end = p.get("end")
                 if not isinstance(start, int) or not isinstance(end, int):
-                    warnings.append(f"Node#{i}(List.ForEachRange) 建议提供整数 start/end 参数")
+                    warnings.append(f"Node#{i}(List.ForEachRange) suggests providing integer start/end parameters")
 
     fixed_dsl = {**dsl, "nodes": canonical}
     return {

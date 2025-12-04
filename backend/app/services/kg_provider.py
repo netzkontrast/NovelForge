@@ -51,7 +51,7 @@ class Neo4jKGProvider:
 			return
 		rows: List[Dict[str, Any]] = []
 		for s, p, o, attrs in triples:
-			# 只写 RELATES_TO，具体类型写入 kind(kind_cn/kind_en)
+			# Write RELATES_TO only, specific type written to kind(kind_cn/kind_en)
 			kind_cn = EN_TO_CN_KIND.get(p, p)
 			payload: Dict[str, Any] = {
 				"s": s,
@@ -100,7 +100,7 @@ class Neo4jKGProvider:
 		if not parts:
 			return {"nodes": [], "edges": [], "alias_table": {}, "fact_summaries": [], "relation_summaries": []}
 
-		# 仅查询 RELATES_TO
+		# Query only RELATES_TO
 		rel_cypher = (
 			"MATCH (a:Entity {group_id:$group})-[r:RELATES_TO]->(b:Entity {group_id:$group}) "
 			"WHERE a.name IN $parts AND b.name IN $parts "
@@ -115,7 +115,7 @@ class Neo4jKGProvider:
 			results = sess.run(rel_cypher, group=group, parts=parts, limit=max(1, int(top_k)))
 			for rec in results:
 				a = rec["a"]; b = rec["b"]; t = rec["t"]; props = rec["props"] or {}
-				# 中文关系类型优先来自属性
+				# Chinese relation type prioritized from properties
 				kind_cn = props.get("kind") or props.get("kind_cn") or None
 				if not kind_cn and props.get("kind_en"):
 					kind_cn = EN_TO_CN_KIND.get(props.get("kind_en"), props.get("kind_en"))
@@ -125,7 +125,7 @@ class Neo4jKGProvider:
 				key = (a, b, str(kind_cn))
 				if key not in rel_items:
 					rel_items[key] = { "a": a, "b": b, "kind": kind_cn }
-				# 附带属性
+				# Attached attributes
 				try:
 					ev = json.loads(props.get("recent_event_summaries_json") or "[]")
 				except Exception: ev = []
@@ -137,7 +137,7 @@ class Neo4jKGProvider:
 				if props.get("recent_dialogues"): rel_items[key]["recent_dialogues"] = props.get("recent_dialogues")
 				if ev: rel_items[key]["recent_event_summaries"] = ev
 				if s is not None: rel_items[key]["stance"] = s
-				# 回显
+				# Echo
 				if len(fact_summaries) < top_k:
 					fact_summaries.append(fact)
 				if len(edges) < top_k:
@@ -153,14 +153,14 @@ class Neo4jKGProvider:
 		}
 
 	def delete_project_graph(self, project_id: int) -> None:
-		"""删除某个项目(group_id)下的所有节点和关系。"""
+		"""Delete all nodes and relationships under a project (group_id)."""
 		group = self._group(project_id)
 		with self._driver.session() as sess:
-			# 先删关系再删节点
+			# Delete relationships then nodes
 			sess.run("MATCH (n:Entity {group_id:$group})-[r]-() DELETE r", group=group)
 			sess.run("MATCH (n:Entity {group_id:$group}) DELETE n", group=group)
 
 
 def get_provider() -> KnowledgeGraphProvider:
-	# 仅使用 Neo4j 提供方
+	# Use Neo4j provider only
 	return Neo4jKGProvider() 

@@ -3,24 +3,24 @@
     <div class="panel-header">
       <div class="header-title-row">
         <div class="title-area">
-          <span class="main-title">灵感助手</span>
+          <span class="main-title">Inspiration Assistant</span>
           <span class="session-subtitle">{{ currentSession.title }}</span>
         </div>
         <div class="spacer"></div>
-        <el-tooltip content="新增对话" placement="bottom">
+        <el-tooltip content="New Chat" placement="bottom">
           <el-button :icon="Plus" size="small" circle @click="createNewSession" />
         </el-tooltip>
-        <el-tooltip content="历史对话" placement="bottom">
+        <el-tooltip content="Chat History" placement="bottom">
           <el-button :icon="Clock" size="small" circle @click="historyDrawerVisible = true" />
         </el-tooltip>
       </div>
       <div class="header-controls-row">
         <el-tag v-if="currentCardTitle" size="small" type="info" class="card-tag" effect="plain">{{ currentCardTitle }}</el-tag>
         <div class="spacer"></div>
-        <el-button size="small" @click="$emit('refresh-context')">刷新上下文</el-button>
+        <el-button size="small" @click="$emit('refresh-context')">Refresh Context</el-button>
         <el-popover placement="bottom" width="480" trigger="hover">
           <template #reference>
-            <el-tag type="info" class="ctx-tag" size="small">预览</el-tag>
+            <el-tag type="info" class="ctx-tag" size="small">Preview</el-tag>
           </template>
           <pre class="ctx-preview">{{ (resolvedContext || '') }}</pre>
         </el-popover>
@@ -38,27 +38,27 @@
             />
           </div>
           
-          <!-- ⏳ 临时显示"正在调用工具"（在工具执行期间） -->
+          <!-- ⏳ Temp "Calling Tools" Display -->
           <div v-if="m.toolsInProgress" class="tools-in-progress">
             <el-icon class="tools-icon spinning"><Loading /></el-icon>
             <pre class="tools-progress-text">{{ m.toolsInProgress }}</pre>
           </div>
           
-          <!-- 工具调用展示 -->
+          <!-- Tool Execution Display -->
           <div v-if="m.tools && m.tools.length" class="tools-summary">
             <div class="tools-header">
               <el-icon class="tools-icon"><Tools /></el-icon>
-              <span class="tools-count">执行了 {{ m.tools.length }} 个操作</span>
+              <span class="tools-count">Executed {{ m.tools.length }} actions</span>
             </div>
             <el-collapse class="tools-collapse">
               <el-collapse-item>
                 <template #title>
-                  <span class="tools-expand-label">查看详情</span>
+                  <span class="tools-expand-label">View Details</span>
                 </template>
                 <div v-for="(tool, tidx) in m.tools" :key="tidx" class="tool-item">
                   <div class="tool-header">
                     <el-tag size="small" type="success">{{ formatToolName(tool.tool_name) }}</el-tag>
-                    <span class="tool-status">{{ tool.result?.success ? '✅ 成功' : '❌ 失败' }}</span>
+                    <span class="tool-status">{{ tool.result?.success ? '✅ Success' : '❌ Failed' }}</span>
                     <el-link 
                       v-if="tool.result?.card_id" 
                       type="primary" 
@@ -68,36 +68,36 @@
                         cardId: tool.result.card_id 
                       })"
                     >
-                      跳转到卡片 →
+                      Jump to Card →
                     </el-link>
                   </div>
                   
-                  <!-- 工具调用详细信息 -->
+                  <!-- Tool Detail Info -->
                   <div class="tool-details">
-                    <!-- 简要消息 -->
+                    <!-- Brief Message -->
                     <div v-if="tool.result?.message" class="tool-message">
                       {{ tool.result.message }}
                     </div>
                     
-                    <!-- 关键返回数据 -->
+                    <!-- Key Return Data -->
                     <div v-if="tool.result" class="tool-result-summary">
                       <div v-if="tool.result.card_id" class="result-field">
-                        <span class="field-label">卡片 ID:</span>
+                        <span class="field-label">Card ID:</span>
                         <span class="field-value">{{ tool.result.card_id }}</span>
                       </div>
                       <div v-if="tool.result.cards_created" class="result-field">
-                        <span class="field-label">创建数量:</span>
-                        <span class="field-value">{{ tool.result.cards_created.length }} 张</span>
+                        <span class="field-label">Created Count:</span>
+                        <span class="field-value">{{ tool.result.cards_created.length }} Cards</span>
                       </div>
                       <div v-if="tool.result.data" class="result-field">
-                        <span class="field-label">返回数据:</span>
+                        <span class="field-label">Return Data:</span>
                         <span class="field-value">{{ typeof tool.result.data === 'object' ? JSON.stringify(tool.result.data).substring(0, 100) + '...' : tool.result.data }}</span>
                       </div>
                     </div>
                     
-                    <!-- 完整 JSON（折叠显示） -->
+                    <!-- Full JSON (Collapsed) -->
                     <el-collapse class="tool-json-collapse">
-                      <el-collapse-item title="查看完整返回数据">
+                      <el-collapse-item title="View Full Return Data">
                         <pre class="tool-json">{{ JSON.stringify(tool.result, null, 2) }}</pre>
                       </el-collapse-item>
                     </el-collapse>
@@ -108,19 +108,19 @@
           </div>
           
           <div v-if="m.role==='assistant'" class="msg-toolbar">
-            <el-button :icon="Refresh" circle size="small" :disabled="isStreaming" @click="handleRegenerateAt(idx)" title="重新生成" />
-            <el-button :icon="DocumentCopy" circle size="small" :disabled="isStreaming || !m.content" @click="handleCopy(idx)" title="复制内容" />
+            <el-button :icon="Refresh" circle size="small" :disabled="isStreaming" @click="handleRegenerateAt(idx)" title="Regenerate" />
+            <el-button :icon="DocumentCopy" circle size="small" :disabled="isStreaming || !m.content" @click="handleCopy(idx)" title="Copy Content" />
           </div>
         </div>
       </div>
-      <div v-if="isStreaming" class="streaming-tip">正在生成中…</div>
+      <div v-if="isStreaming" class="streaming-tip">Generating…</div>
     </div>
 
     <div class="composer">
       <div class="inject-toolbar">
-        <!-- 引用卡片显示区（分成两个容器：标签区 + 更多按钮区） -->
+        <!-- Citation Cards Display Area -->
         <div class="chips">
-          <!-- 标签显示区（可滚动溢出） -->
+          <!-- Tag Display -->
           <div class="chips-tags">
             <el-tag 
               v-for="(r, idx) in visibleRefs" 
@@ -136,7 +136,7 @@
             </el-tag>
           </div>
           
-          <!-- 更多按钮区（固定显示，不受宽度影响） -->
+          <!-- More Button -->
           <div v-if="assistantStore.injectedRefs.length > 0" class="chips-more">
             <el-popover
               placement="bottom-start"
@@ -148,18 +148,18 @@
                   size="small" 
                   text
                   class="more-refs-btn"
-                  :title="`共 ${assistantStore.injectedRefs.length} 个引用卡片`"
+                  :title="`Total ${assistantStore.injectedRefs.length} cited cards`"
                 >
                   <span class="more-refs-dots">...</span>
                   <span class="more-refs-count">({{ assistantStore.injectedRefs.length }})</span>
                 </el-button>
               </template>
               
-              <!-- Popover 内容 -->
+              <!-- Popover Content -->
               <div class="more-refs-popover">
                 <div class="popover-header">
-                  <span>引用卡片</span>
-                  <span class="popover-count">{{ assistantStore.injectedRefs.length }} 个</span>
+                  <span>Cited Cards</span>
+                  <span class="popover-count">{{ assistantStore.injectedRefs.length }}</span>
                 </div>
                 <div class="more-refs-list">
                   <div 
@@ -176,7 +176,7 @@
                       size="small" 
                       text 
                       @click="removeInjectedRef(idx)"
-                      title="删除引用"
+                      title="Remove Citation"
                     />
                   </div>
                 </div>
@@ -185,19 +185,19 @@
           </div>
         </div>
         
-        <el-button size="small" :icon="Plus" @click="openInjectSelector" class="add-ref-btn">添加引用</el-button>
+        <el-button size="small" :icon="Plus" @click="openInjectSelector" class="add-ref-btn">Add Citation</el-button>
       </div>
       
       <div class="composer-subbar">
-        <el-select v-model="overrideLlmId" placeholder="选择模型" size="small" style="width: 200px">
+        <el-select v-model="overrideLlmId" placeholder="Select Model" size="small" style="width: 200px">
           <el-option v-for="m in llmOptions" :key="m.id" :label="(m.display_name || m.model_name)" :value="m.id" />
         </el-select>
       </div>
       
-      <el-input v-model="draft" type="textarea" :rows="4" placeholder="输入你的想法、约束或追问" :disabled="isStreaming" @keydown="onComposerKeydown" class="composer-input" />
+      <el-input v-model="draft" type="textarea" :rows="4" placeholder="Enter your thoughts, constraints or follow-up questions" :disabled="isStreaming" @keydown="onComposerKeydown" class="composer-input" />
       
       <div class="composer-actions">
-        <el-tooltip content="React模式：通过文本格式调用工具，兼容更多模型" placement="top">
+        <el-tooltip content="React Mode: Call tools via text format, compatible with more models" placement="top">
           <el-switch 
             v-model="useReactMode" 
             size="small"
@@ -205,44 +205,44 @@
             style="margin-right: auto"
           />
         </el-tooltip>
-        <el-button :disabled="!isStreaming" @click="handleCancel">中止</el-button>
-        <el-button type="primary" :icon="Promotion" circle :disabled="isStreaming || !canSend" @click="handleSend" title="发送" />
+        <el-button :disabled="!isStreaming" @click="handleCancel">Stop</el-button>
+        <el-button type="primary" :icon="Promotion" circle :disabled="isStreaming || !canSend" @click="handleSend" title="Send" />
       </div>
     </div>
 
-    <!-- 选择器对话框 -->
-    <el-dialog v-model="selectorVisible" title="添加引用卡片" width="760px">
+    <!-- Selector Dialog -->
+    <el-dialog v-model="selectorVisible" title="Add Citation Card" width="760px">
       <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-        <el-select v-model="selectorSourcePid" placeholder="来源项目" style="width: 260px" @change="onSelectorProjectChange($event as any)">
+        <el-select v-model="selectorSourcePid" placeholder="Source Project" style="width: 260px" @change="onSelectorProjectChange($event as any)">
           <el-option v-for="p in assistantStore.projects" :key="p.id" :label="p.name" :value="p.id" />
         </el-select>
-        <el-input v-model="selectorSearch" placeholder="搜索标题..." clearable style="flex:1" />
+        <el-input v-model="selectorSearch" placeholder="Search Title..." clearable style="flex:1" />
       </div>
       <el-tree :data="selectorTreeData" :props="{ label: 'label', children: 'children' }" node-key="key" show-checkbox highlight-current :default-expand-all="false" :check-strictly="false" @check="onTreeCheck" style="max-height:360px; overflow:auto; border:1px solid var(--el-border-color-light); padding:8px; border-radius:6px;" />
       <template #footer>
-        <el-button @click="selectorVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="!selectorSelectedIds.length || !selectorSourcePid" @click="confirmAddInjectedRefs">添加</el-button>
+        <el-button @click="selectorVisible = false">Cancel</el-button>
+        <el-button type="primary" :disabled="!selectorSelectedIds.length || !selectorSourcePid" @click="confirmAddInjectedRefs">Add</el-button>
       </template>
     </el-dialog>
 
-    <!-- 历史对话抽屉 -->
+    <!-- History Drawer -->
     <el-drawer
       v-model="historyDrawerVisible"
-      title="历史对话"
+      title="Chat History"
       direction="rtl"
       size="320px"
     >
       <div class="history-drawer-content">
         <div class="history-actions">
           <el-button type="primary" :icon="Plus" @click="createNewSession" style="width: 100%;">
-            新增对话
+            New Chat
           </el-button>
         </div>
 
         <el-divider />
 
         <div v-if="!historySessions.length" class="empty-history">
-          <el-empty description="暂无历史对话" :image-size="80" />
+          <el-empty description="No Chat History" :image-size="80" />
         </div>
 
         <div v-else class="history-list">
@@ -302,7 +302,7 @@ const isStreaming = ref(false)
 let streamCtl: { cancel: () => void } | null = null
 const messagesEl = ref<HTMLDivElement | null>(null)
 
-// ===== 会话管理 =====
+// ===== Session Management =====
 interface ChatSession {
   id: string
   projectId: number
@@ -315,7 +315,7 @@ interface ChatSession {
 const currentSession = ref<ChatSession>({
   id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   projectId: 0,
-  title: '新对话',
+  title: 'New Chat',
   createdAt: Date.now(),
   updatedAt: Date.now(),
   messages: []
@@ -332,20 +332,20 @@ const canRegenerateNow = computed(() => {
   return !!last && last.role === 'assistant'
 })
 
-// 模型选择（覆盖卡片配置，按项目记忆）
+// Model Selection (Per project)
 const llmOptions = ref<LLMConfigRead[]>([])
 const overrideLlmId = ref<number | null>(null)
 const effectiveLlmId = computed(() => overrideLlmId.value || (props.llmConfigId as any) || null)
 const MODEL_KEY_PREFIX = 'nf:assistant:model:'
 function modelKeyForProject(pid: number) { return `${MODEL_KEY_PREFIX}${pid}` }
 
-// ReAct 模式开关（按项目记忆）
+// ReAct Mode Switch (Per project)
 const useReactMode = ref(false)
 const REACT_MODE_KEY_PREFIX = 'nf:assistant:react:'
 function reactModeKeyForProject(pid: number) { return `${REACT_MODE_KEY_PREFIX}${pid}` }
 
-// 引用卡片显示控制
-const MAX_VISIBLE_REFS = 5  // 最多显示5个引用（约两行，每行2-3个）
+// Cited Cards Display Control
+const MAX_VISIBLE_REFS = 5  // Max 5 visible
 
 const visibleRefs = computed(() => {
   return assistantStore.injectedRefs.slice(0, MAX_VISIBLE_REFS)
@@ -382,7 +382,7 @@ const canSend = computed(() => {
   return !!effectiveLlmId.value && (hasDraft || hasRefs)
 })
 
-// ---- 多卡片数据引用（跨项目，使用 Pinia） ----
+// ---- Multi-card Reference (Cross-project, using Pinia) ----
 const assistantStore = useAssistantStore()
 const projectStore = useProjectStore()
 const appStore = useAppStore()
@@ -400,7 +400,7 @@ const filteredSelectorCards = computed(() => {
 const selectorTreeData = computed(() => {
   const byType: Record<string, any[]> = {}
   for (const c of filteredSelectorCards.value || []) {
-    const tn = c.card_type?.name || '未分类'
+    const tn = c.card_type?.name || 'Uncategorized'
     if (!byType[tn]) byType[tn] = []
     byType[tn].push({ id: c.id, title: c.title, label: c.title, key: `card:${c.id}`, isLeaf: true })
   }
@@ -468,13 +468,13 @@ function buildConversationText() {
     const prefix = m.role === 'user' ? 'User:' : 'Assistant:'
     let text = `${prefix} ${m.content}`
     
-    // 如果有工具调用历史，添加到对话中（让 LLM 知道工具执行结果）
+    // Add tool history
     if (m.tools && m.tools.length > 0) {
-      text += '\n\n[工具调用记录]'
+      text += '\n\n[Tool Call Record]'
       for (const tool of m.tools) {
-        text += `\n- 工具: ${tool.tool_name}`
+        text += `\n- Tool: ${tool.tool_name}`
         if (tool.result) {
-          text += `\n  结果: ${JSON.stringify(tool.result, null, 2)}`
+          text += `\n  Result: ${JSON.stringify(tool.result, null, 2)}`
         }
       }
     }
@@ -483,52 +483,52 @@ function buildConversationText() {
   }).join('\n\n')
 }
 
-//  构建灵感助手请求参数（使用新的项目结构化上下文）
+//  Build Assistant Request Params
 function buildAssistantChatRequest() {
   const parts: string[] = []
   
-  // 1. 项目结构化上下文（新增）
+  // 1. Project Structure Context
   if (assistantStore.projectStructure) {
     const struct = assistantStore.projectStructure
-    parts.push(`# 项目: ${struct.project_name}`)
-    parts.push(`项目ID: ${struct.project_id} | 卡片总数: ${struct.total_cards}`)
+    parts.push(`# Project: ${struct.project_name}`)
+    parts.push(`Project ID: ${struct.project_id} | Total Cards: ${struct.total_cards}`)
     parts.push('')
     
-    // 统计信息
+    // Stats
     const stats = Object.entries(struct.stats)
-      .map(([type, count]) => `- ${type}: ${count} 张`)
+      .map(([type, count]) => `- ${type}: ${count} Cards`)
       .join('\n')
-    parts.push(`## 📊 项目统计\n${stats}`)
+    parts.push(`## 📊 Project Stats\n${stats}`)
     parts.push('')
     
-    // 卡片树
-    parts.push(`## 🌲 卡片结构树\nROOT\n${struct.tree_text}`)
+    // Tree
+    parts.push(`## 🌲 Card Structure Tree\nROOT\n${struct.tree_text}`)
     parts.push('')
     
-    // 可用类型
-    parts.push(`## 🏷️ 可用卡片类型`)
+    // Available Types
+    parts.push(`## 🏷️ Available Card Types`)
     parts.push(struct.available_card_types.join(' | '))
     parts.push('')
   }
   
-  // 2. 近期操作（新增）
+  // 2. Recent Operations
   const opsText = assistantStore.formatRecentOperations()
   if (opsText) {
-    parts.push(`## 📝 近期操作\n${opsText}`)
+    parts.push(`## 📝 Recent Operations\n${opsText}`)
     parts.push('')
   }
   
-  // 3. 当前卡片（包含 Schema）
+  // 3. Current Card (Including Schema)
   const context = assistantStore.getContextForAssistant()
   if (context.active_card) {
-    parts.push(`## ⭐ 当前卡片`)
-    parts.push(`"${context.active_card.title}" (ID: ${context.active_card.card_id}, 类型: ${context.active_card.card_type})`)
+    parts.push(`## ⭐ Current Card`)
+    parts.push(`"${context.active_card.title}" (ID: ${context.active_card.card_id}, Type: ${context.active_card.card_type})`)
     
-    // 添加当前卡片的 JSON Schema
+    // Add JSON Schema
     if (props.effectiveSchema) {
       try {
         const schemaText = JSON.stringify(props.effectiveSchema, null, 2)
-        parts.push(`\n### 卡片结构 (JSON Schema)`)
+        parts.push(`\n### Card Structure (JSON Schema)`)
         parts.push('```json')
         parts.push(schemaText)
         parts.push('```')
@@ -538,7 +538,7 @@ function buildAssistantChatRequest() {
     parts.push('')
   }
   
-  // 4. 引用卡片数据（保留，但简化）
+  // 4. Cited Card Data
   if (assistantStore.injectedRefs.length) {
     const blocks: string[] = []
     for (const ref of assistantStore.injectedRefs) {
@@ -546,24 +546,24 @@ function buildAssistantChatRequest() {
         const cleaned = pruneEmpty(ref.content)
         const text = JSON.stringify(cleaned ?? {}, null, 2)
         const clipped = text.length > 4000 ? text.slice(0, 4000) + '\n/* ... */' : text
-        blocks.push(`### 【引用】${ref.projectName} / ${ref.cardTitle}\n\`\`\`json\n${clipped}\n\`\`\``)
+        blocks.push(`### [Ref] ${ref.projectName} / ${ref.cardTitle}\n\`\`\`json\n${clipped}\n\`\`\``)
       } catch {}
     }
-    parts.push(`## 📎 引用卡片\n${blocks.join('\n\n')}`)
+    parts.push(`## 📎 Cited Cards\n${blocks.join('\n\n')}`)
     parts.push('')
   }
   
-  // 5. @DSL 上下文（保留）
+  // 5. DSL Context
   if (props.resolvedContext) {
-    parts.push(`## 🔗 上下文引用\n${props.resolvedContext}`)
+    parts.push(`## 🔗 Context Reference\n${props.resolvedContext}`)
     parts.push('')
   }
   
-  // 6. 对话历史
-  parts.push(`## 💬 对话历史`)
+  // 6. Chat History
+  parts.push(`## 💬 Chat History`)
   parts.push(buildConversationText())
   
-  // 从messages中获取最后一条用户消息，而不是从draft（draft在handleSend中已被清空）
+  // Get last user message
   const lastUserMessage = messages.value.filter(m => m.role === 'user').pop()
   const userPrompt = lastUserMessage?.content?.trim() || ''
   
@@ -578,62 +578,62 @@ function scrollToBottom() { nextTick(() => { try { const el = messagesEl.value; 
 function startStreaming(_prev: string, _tail: string, targetIdx: number) {
   isStreaming.value = true
   
-  // 构建请求参数
+  // Build request params
   const chatRequest = buildAssistantChatRequest()
   
-  // 临时工具调用状态（用于立即显示"正在调用工具"）
+  // Temp tool call state
   let pendingToolCalls: any[] = []
   
   streamCtl = generateContinuationStreaming({
     ...chatRequest,
     llm_config_id: effectiveLlmId.value as number,
-    prompt_name: (props.promptName && props.promptName.trim()) ? props.promptName : '灵感对话',
+    prompt_name: (props.promptName && props.promptName.trim()) ? props.promptName : 'Chat',
     project_id: projectStore.currentProject?.id as number,
     stream: true,
     temperature: props.temperature ?? 0.7,
     max_tokens: props.max_tokens ?? 8192,
     timeout: props.timeout ?? undefined,
-    use_react_mode: useReactMode.value  // ReAct 模式开关
+    use_react_mode: useReactMode.value  // ReAct Mode Switch
   } as any, (chunk) => {
-    // 🔑 优先检测所有特殊标记（这些标记不应该显示在消息内容中）
+    // 🔑 Detect special markers
     
-    // ReAct 模式：检测工具调用开始
+    // ReAct: Detect Tool Call Start
     if (chunk.includes('__TOOL_CALL_DETECTED__')) {
       if (messages.value[targetIdx]) {
-        messages.value[targetIdx].toolsInProgress = '⏳ 正在调用工具...'
+        messages.value[targetIdx].toolsInProgress = '⏳ Calling tools...'
       }
       scrollToBottom()
       return
     }
     
-    // ReAct 模式：检测工具执行完成
+    // ReAct: Detect Tool Executed
     if (chunk.includes('__TOOL_EXECUTED__:')) {
       const match = chunk.match(/__TOOL_EXECUTED__:(.+)/)
       if (match && messages.value[targetIdx]) {
         try {
           const toolResult = JSON.parse(match[1])
           
-          // 记录工具调用
+          // Record tool call
           if (!messages.value[targetIdx].tools) {
             messages.value[targetIdx].tools = []
           }
           messages.value[targetIdx].tools.push(toolResult)
           
-          // 清除进度状态
+          // Clear progress status
           messages.value[targetIdx].toolsInProgress = undefined
           
-          // 🔑 关键：调用刷新逻辑（与标准模式相同）
+          // Refresh logic
           handleToolsExecuted([toolResult])
           
           scrollToBottom()
         } catch (e) {
-          console.warn('[ReAct] 解析工具执行结果失败', e)
+          console.warn('[ReAct] Parse tool result failed', e)
         }
       }
       return
     }
     
-    // 检测 __TOOL_CALL_START__（标准模式）
+    // Detect __TOOL_CALL_START__ (Standard Mode)
     if (chunk.includes('__TOOL_CALL_START__:')) {
       const match = chunk.match(/__TOOL_CALL_START__:(.+)/)
       if (match && messages.value[targetIdx]) {
@@ -642,34 +642,34 @@ function startStreaming(_prev: string, _tail: string, targetIdx: number) {
           pendingToolCalls.push(toolCall)
           
           if (!messages.value[targetIdx].toolsInProgress) {
-            const toolsPreview = pendingToolCalls.map(t => `⏳ 正在调用工具: ${t.tool_name}...`).join('\n')
+            const toolsPreview = pendingToolCalls.map(t => `⏳ Calling tool: ${t.tool_name}...`).join('\n')
             messages.value[targetIdx].toolsInProgress = toolsPreview
           }
           scrollToBottom()
         } catch (e) {
-          console.warn('解析工具调用开始失败', e)
+          console.warn('Parse tool call start failed', e)
         }
       }
-      return  // 不添加到消息内容
+      return  // Do not add to message content
     }
     
-    // 检测 __RETRY__
+    // Detect __RETRY__
     if (chunk.includes('__RETRY__:')) {
       const match = chunk.match(/__RETRY__:(.+)/)
       if (match && messages.value[targetIdx]) {
         try {
           const retryInfo = JSON.parse(match[1])
           messages.value[targetIdx].toolsInProgress = 
-            `🔄 工具调用失败，${retryInfo.reason}，正在重试 (${retryInfo.retry}/${retryInfo.max})...`
+            `🔄 Tool call failed, ${retryInfo.reason}, retrying (${retryInfo.retry}/${retryInfo.max})...`
           scrollToBottom()
         } catch (e) {
-          console.warn('解析重试信息失败', e)
+          console.warn('Parse retry info failed', e)
         }
       }
-      return  // 不添加到消息内容
+      return  // Do not add
     }
     
-    // 检测 __TOOL_SUMMARY__
+    // Detect __TOOL_SUMMARY__
     if (chunk.includes('__TOOL_SUMMARY__:')) {
       const match = chunk.match(/__TOOL_SUMMARY__:(.+)/)
       if (match && messages.value[targetIdx]) {
@@ -679,67 +679,66 @@ function startStreaming(_prev: string, _tail: string, targetIdx: number) {
           messages.value[targetIdx].toolsInProgress = undefined
           pendingToolCalls = []
         } catch (e) {
-          console.warn('解析工具摘要失败', e)
+          console.warn('Parse tool summary failed', e)
         }
       }
-      return  // 不添加到消息内容
+      return  // Do not add
     }
     
-    // 检测 __ERROR__
+    // Detect __ERROR__
     if (chunk.includes('__ERROR__:')) {
       const match = chunk.match(/__ERROR__:(.+)/)
       if (match && messages.value[targetIdx]) {
         try {
           const errorInfo = JSON.parse(match[1])
-          messages.value[targetIdx].toolsInProgress = `❌ 工具调用失败: ${errorInfo.error || '执行失败'}`
+          messages.value[targetIdx].toolsInProgress = `❌ Tool call failed: ${errorInfo.error || 'Execution failed'}`
           pendingToolCalls = []
           scrollToBottom()
         } catch (e) {
-          console.warn('解析错误信息失败', e)
+          console.warn('Parse error info failed', e)
         }
       }
-      return  // 不添加到消息内容
+      return  // Do not add
     }
     
-    // 检测并处理 <notify>tool_name</notify> 标记
+    // Detect <notify>tool_name</notify>
     let hasToolTag = false
     const toolMatch = chunk.match(/<notify>([\w\-]+)<\/notify>/)
     if (toolMatch && messages.value[targetIdx]) {
       hasToolTag = true
       const toolName = toolMatch[1]
       
-      // 立即显示工具调用状态
+      // Immediately show status
       if (!messages.value[targetIdx].toolsInProgress) {
-        messages.value[targetIdx].toolsInProgress = `⏳ 正在调用工具: ${toolName}...`
+        messages.value[targetIdx].toolsInProgress = `⏳ Calling tool: ${toolName}...`
         scrollToBottom()
       }
       
-      // 从chunk中移除 <notify> 标记
+      // Remove tag
       chunk = chunk.replace(/<notify>[\w\-]+<\/notify>/g, '')
     }
     
-    // 过滤后如果没有实际内容，不添加
+    // If no content after filtering
     const trimmedChunk = chunk.trim()
     if (!trimmedChunk) {
       if (hasToolTag) scrollToBottom()
       return
     }
     
-    // 安全检查：确保目标消息仍然存在
+    // Safety check
     if (!messages.value[targetIdx]) {
-      console.warn(`⚠️ [AssistantPanel] 目标消息索引 ${targetIdx} 不存在，停止流式输出`)
+      console.warn(`⚠️ [AssistantPanel] Target msg index ${targetIdx} missing, stop stream`)
       return
     }
     
-    // 正常文本追加
+    // Append content
     messages.value[targetIdx].content += chunk
     
-    // 🔑 当收到正常文本时，清除工具调用进度提示（说明AI已经开始输出结果）
+    // Clear progress on receiving text
     if (trimmedChunk.length > 0 && messages.value[targetIdx]?.toolsInProgress) {
-      // 只有当工具调用状态不是失败状态时才清除（失败状态需要保留显示）
       if (!messages.value[targetIdx].toolsInProgress.includes('❌')) {
         nextTick(() => {
-          if (messages.value[targetIdx]) {  // 再次检查，防止在 nextTick 期间被删除
+          if (messages.value[targetIdx]) {
             messages.value[targetIdx].toolsInProgress = undefined
             pendingToolCalls = []
           }
@@ -749,11 +748,11 @@ function startStreaming(_prev: string, _tail: string, targetIdx: number) {
     
     scrollToBottom()
   }, () => {
-    // 流结束时的清理
+    // End stream
     isStreaming.value = false
     streamCtl = null
     
-    // 如果工具调用状态不是失败状态，则清除（失败状态保留以供用户查看）
+    // Clear progress unless error
     if (messages.value[targetIdx]?.toolsInProgress && 
         !messages.value[targetIdx].toolsInProgress.includes('❌')) {
       messages.value[targetIdx].toolsInProgress = undefined
@@ -767,12 +766,12 @@ function startStreaming(_prev: string, _tail: string, targetIdx: number) {
       }
     } catch {}
   }, (err) => { 
-    // ✅ 错误时也要清除"正在调用工具"状态
+    // Error
     if (messages.value[targetIdx]) {
       messages.value[targetIdx].toolsInProgress = undefined
     }
     pendingToolCalls = []
-    ElMessage.error(err?.message || '生成失败')
+    ElMessage.error(err?.message || 'Generation Failed')
     isStreaming.value = false
     streamCtl = null 
   }) as any
@@ -787,7 +786,7 @@ function handleSend() {
   draft.value = ''
   scrollToBottom()
 
-  // 灵感助手不需要 prev/tail，直接在 startStreaming 内部构建请求
+  // Assistant prompt
   const assistantIdx = messages.value.push({ role: 'assistant', content: '' }) - 1
   scrollToBottom()
   lastRun.value = { prev: '', tail: '', targetIdx: assistantIdx }
@@ -798,7 +797,6 @@ function handleCancel() {
   try { streamCtl?.cancel() } catch {}
   isStreaming.value = false
   
-  // 清除所有消息中的工具调用进度提示
   messages.value.forEach(msg => {
     if (msg.toolsInProgress) {
       msg.toolsInProgress = undefined
@@ -821,7 +819,6 @@ function regenerateFromCurrent() {
   startStreaming('', '', targetIdx)
 }
 function handleRegenerateWithHistory() {
-  // 优先移除历史中的最后一条助手消息
   try {
     const pid = projectStore.currentProject?.id
     if (pid) {
@@ -852,7 +849,6 @@ function handleRegenerateAt(idx: number) {
   if (isStreaming.value) return
   if (idx < 0 || idx >= messages.value.length) return
   if (messages.value[idx].role !== 'assistant') return
-  // 历史剪裁到该条之前
   try {
     const pid = projectStore.currentProject?.id
     if (pid) {
@@ -860,10 +856,8 @@ function handleRegenerateAt(idx: number) {
       assistantStore.setHistory(pid, prevMsgs.map(m => ({ role: m.role as any, content: m.content })))
     }
   } catch {}
-  // 覆盖该条助手消息（清空内容和工具调用记录）
   messages.value[idx].content = ''
-  messages.value[idx].tools = undefined  //  清除工具调用记录
-  // 同时丢弃其后的消息（因上下文已失真）
+  messages.value[idx].tools = undefined
   if (messages.value.length > idx + 1) messages.value.splice(idx + 1)
   lastRun.value = { prev: '', tail: '', targetIdx: idx }
   startStreaming('', '', idx)
@@ -883,7 +877,6 @@ onMounted(async () => {
     llmOptions.value = await listLLMConfigs()
     const pid = projectStore.currentProject?.id
     
-    // 恢复模型选择
     const saved = pid ? Number(localStorage.getItem(modelKeyForProject(pid)) || '') : NaN
     if (saved && Number.isFinite(saved)) {
       overrideLlmId.value = saved
@@ -891,7 +884,6 @@ onMounted(async () => {
       overrideLlmId.value = llmOptions.value[0].id
     }
     
-    // 恢复 React 模式设置
     if (pid) {
       const reactModeSaved = localStorage.getItem(reactModeKeyForProject(pid))
       if (reactModeSaved !== null) {
@@ -904,38 +896,32 @@ onMounted(async () => {
 async function handleCopy(idx: number) {
   try {
     await navigator.clipboard.writeText(messages.value[idx]?.content || '')
-    ElMessage.success('已复制到剪贴板')
+    ElMessage.success('Copied to clipboard')
   } catch {
-    ElMessage.error('复制失败')
+    ElMessage.error('Copy failed')
   }
 }
 
-// ✅ 新增：处理工具执行结果
+// Handle Tool Results
 function handleToolsExecuted(tools: Array<{tool_name: string, result: any}>) {
-  console.log('🔧 工具已执行:', tools)
+  console.log('🔧 Tools executed:', tools)
   
-  // 关联到最后一条助手消息
   const lastIdx = messages.value.length - 1
   if (lastIdx >= 0 && messages.value[lastIdx].role === 'assistant') {
     messages.value[lastIdx].tools = tools
   }
   
-  // 刷新左侧卡片树（如果有卡片被创建或修改）
   const needsRefresh = tools.some(t => {
     const toolName = t.tool_name
     const result = t.result
     
-    // 这些工具调用后需要刷新卡片列表
     const refreshTools = ['create_card', 'modify_card_field', 'batch_create_cards', 'replace_field_text']
     
     if (refreshTools.includes(toolName)) {
-      console.log(`🔄 检测到 ${toolName} 调用，准备刷新卡片列表`)
       return true
     }
     
-    // 或者有 card_id 字段的结果
     if (result?.card_id) {
-      console.log(`🔄 检测到 card_id: ${result.card_id}，准备刷新卡片列表`)
       return true
     }
     
@@ -944,35 +930,31 @@ function handleToolsExecuted(tools: Array<{tool_name: string, result: any}>) {
   
   if (needsRefresh && projectStore.currentProject?.id) {
     const cardStore = useCardStore()
-    console.log('🔄 开始刷新卡片列表...')
-    // 刷新整个卡片列表
     cardStore.fetchCards(projectStore.currentProject.id).then(() => {
-      console.log('✅ 卡片列表刷新完成')
+      console.log('✅ Card list refreshed')
     }).catch((err) => {
-      console.error('❌ 卡片列表刷新失败:', err)
+      console.error('❌ Card list refresh failed:', err)
     })
   }
   
-  // 显示通知
   const successTools = tools.filter(t => t.result?.success)
   if (successTools.length > 0) {
-    ElMessage.success(`✅ 已执行 ${successTools.length} 个操作`)
+    ElMessage.success(`✅ Executed ${successTools.length} actions`)
   }
 }
 
-// 工具名称格式化
 function formatToolName(name: string): string {
   const map: Record<string, string> = {
-    'search_cards': '搜索卡片',
-    'create_card': '创建卡片',
-    'modify_card_field': '修改字段',
-    'batch_create_cards': '批量创建',
-    'replace_field_text': '替换文本'
+    'search_cards': 'Search Cards',
+    'create_card': 'Create Card',
+    'modify_card_field': 'Modify Field',
+    'batch_create_cards': 'Batch Create',
+    'replace_field_text': 'Replace Text'
   }
   return map[name] || name
 }
 
-// ===== 会话管理函数 =====
+// ===== Session Management =====
 function getSessionStorageKey(projectId: number): string {
   return `assistant-sessions-${projectId}`
 }
@@ -984,22 +966,21 @@ function loadHistorySessions(projectId: number) {
     if (stored) {
       const sessions = JSON.parse(stored) as ChatSession[]
       historySessions.value = sessions.sort((a, b) => b.updatedAt - a.updatedAt)
-      console.log(`📚 加载了 ${sessions.length} 个历史会话`)
+      console.log(`📚 Loaded ${sessions.length} sessions`)
     } else {
       historySessions.value = []
     }
   } catch (e) {
-    console.error('加载历史会话失败:', e)
+    console.error('Failed to load history sessions:', e)
     historySessions.value = []
   }
 }
 
 function saveCurrentSession() {
   if (!projectStore.currentProject?.id) return
-  if (messages.value.length === 0) return  // 空会话不保存
+  if (messages.value.length === 0) return
   
   try {
-    // 深拷贝当前会话以避免引用问题
     const sessionToSave = {
       ...currentSession.value,
       messages: JSON.parse(JSON.stringify(messages.value)),
@@ -1007,8 +988,7 @@ function saveCurrentSession() {
       projectId: projectStore.currentProject.id
     }
     
-    // 自动生成标题（使用第一条用户消息的前20个字符）
-    if (sessionToSave.title === '新对话') {
+    if (sessionToSave.title === 'New Chat') {
       const firstUserMsg = messages.value.find(m => m.role === 'user')
       if (firstUserMsg) {
         sessionToSave.title = firstUserMsg.content.substring(0, 20) + (firstUserMsg.content.length > 20 ? '...' : '')
@@ -1017,7 +997,6 @@ function saveCurrentSession() {
     
     const key = getSessionStorageKey(projectStore.currentProject.id)
     
-    // 从 localStorage 读取最新的会话列表（避免并发问题）
     let sessions: ChatSession[] = []
     try {
       const stored = localStorage.getItem(key)
@@ -1026,20 +1005,15 @@ function saveCurrentSession() {
       sessions = []
     }
     
-    // 查找并更新现有会话，或添加新会话
     const existingIndex = sessions.findIndex(s => s.id === sessionToSave.id)
     if (existingIndex >= 0) {
-      // 更新现有会话
       sessions[existingIndex] = sessionToSave
-      // 将更新的会话移到最前面
       const [updated] = sessions.splice(existingIndex, 1)
       sessions.unshift(updated)
     } else {
-      // 添加新会话到最前面
       sessions.unshift(sessionToSave)
     }
     
-    // 最多保留50个会话
     if (sessions.length > 50) {
       sessions.splice(50)
     }
@@ -1047,56 +1021,47 @@ function saveCurrentSession() {
     localStorage.setItem(key, JSON.stringify(sessions))
     historySessions.value = sessions
     
-    // 更新当前会话的标题（如果改变了）
     if (currentSession.value.title !== sessionToSave.title) {
       currentSession.value.title = sessionToSave.title
     }
   } catch (e) {
-    console.error('保存会话失败:', e)
+    console.error('Failed to save session:', e)
   }
 }
 
 function createNewSession() {
-  // 先保存当前会话（如果有消息）
   if (messages.value.length > 0) {
     saveCurrentSession()
   }
   
-  // 创建新会话（不清空输入框）
   currentSession.value = {
     id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     projectId: projectStore.currentProject?.id || 0,
-    title: '新对话',
+    title: 'New Chat',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     messages: []
   }
   
   messages.value = []
-  
-  // 关闭抽屉
   historyDrawerVisible.value = false
-  
-  console.log('📝 创建新对话')
+  console.log('📝 Create New Chat')
 }
 
 function loadSession(sessionId: string) {
   const session = historySessions.value.find(s => s.id === sessionId)
   if (!session) return
   
-  // 先保存当前会话
   if (messages.value.length > 0) {
     saveCurrentSession()
   }
   
-  // 加载选中的会话
   currentSession.value = { ...session }
   messages.value = [...session.messages]
   
-  // 关闭抽屉
   historyDrawerVisible.value = false
   
-  console.log('📖 加载会话:', session.title)
+  console.log('📖 Load session:', session.title)
   nextTick(() => scrollToBottom())
 }
 
@@ -1108,22 +1073,21 @@ function deleteSession(sessionId: string) {
     historySessions.value = historySessions.value.filter(s => s.id !== sessionId)
     localStorage.setItem(key, JSON.stringify(historySessions.value))
     
-    // 如果删除的是当前会话，创建新会话
     if (currentSession.value.id === sessionId) {
       createNewSession()
     }
     
-    ElMessage.success('已删除会话')
+    ElMessage.success('Chat deleted')
   } catch (e) {
-    console.error('删除会话失败:', e)
-    ElMessage.error('删除会话失败')
+    console.error('Delete chat failed:', e)
+    ElMessage.error('Delete chat failed')
   }
 }
 
 function handleDeleteSession(sessionId: string) {
-  ElMessageBox.confirm('确定要删除这个对话吗？', '确认删除', {
-    confirmButtonText: '删除',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm('Are you sure you want to delete this chat?', 'Confirm Delete', {
+    confirmButtonText: 'Delete',
+    cancelButtonText: 'Cancel',
     type: 'warning'
   }).then(() => {
     deleteSession(sessionId)
@@ -1138,81 +1102,57 @@ function formatSessionTime(timestamp: number): string {
   const day = 24 * hour
   
   if (diff < minute) {
-    return '刚刚'
+    return 'Just now'
   } else if (diff < hour) {
-    return `${Math.floor(diff / minute)}分钟前`
+    return `${Math.floor(diff / minute)} mins ago`
   } else if (diff < day) {
-    return `${Math.floor(diff / hour)}小时前`
+    return `${Math.floor(diff / hour)} hours ago`
   } else if (diff < 7 * day) {
-    return `${Math.floor(diff / day)}天前`
+    return `${Math.floor(diff / day)} days ago`
   } else {
     const date = new Date(timestamp)
     return `${date.getMonth() + 1}/${date.getDate()}`
   }
 }
 
-// 过滤消息内容中的特殊标记
 function filterMessageContent(content: string): string {
   if (!content) return ''
-  
-  // 移除完整的 <notify>xxx</notify> 标记
   let filtered = content.replace(/<notify>[\w\-]*<\/notify>/g, '')
-  
-  // 移除末尾不完整的 <notify 标记（流式传输时可能出现）
   filtered = filtered.replace(/<notify[^>]*$/g, '')
-  
-  // ReAct 模式：移除 <tool_call>...</tool_call> 标记及其内容
   filtered = filtered.replace(/<tool_call>[\s\S]*?<\/tool_call>/g, '')
-  
-  // 移除不完整的 <tool_call> 标记
   filtered = filtered.replace(/<tool_call[^>]*$/g, '')
-  
-  // 移除所有协议标记
   filtered = filtered.replace(/__TOOL_CALL_START__:.*/g, '')
   filtered = filtered.replace(/__TOOL_CALL_DETECTED__.*/g, '')
   filtered = filtered.replace(/__TOOL_EXECUTED__:.*/g, '')
   filtered = filtered.replace(/__RETRY__:.*/g, '')
   filtered = filtered.replace(/__TOOL_SUMMARY__:.*/g, '')
   filtered = filtered.replace(/__ERROR__:.*/g, '')
-  
-  // ReAct 模式：移除工具执行结果文本块（**工具执行结果**：...）
   filtered = filtered.replace(/\*\*工具执行结果\*\*：[\s\S]*?```json[\s\S]*?```/g, '')
-  
   return filtered.trim()
 }
 
-// 项目切换时加载该项目的历史会话
 watch(() => projectStore.currentProject?.id, (newProjectId, oldProjectId) => {
   if (newProjectId) {
     loadHistorySessions(newProjectId)
-    
-    // 如果有历史会话，加载最近的一个（避免重复创建新会话）
-    // 只有在无历史会话时才创建新会话
     if (historySessions.value.length > 0) {
-      // 加载最近的会话
       const latestSession = historySessions.value[0]
       currentSession.value = { ...latestSession }
       messages.value = [...latestSession.messages]
-      console.log('📖 加载最近会话:', latestSession.title)
+      console.log('📖 Load recent session:', latestSession.title)
       nextTick(() => scrollToBottom())
     } else {
-      // 无历史会话：创建新会话
       createNewSession()
     }
   }
 }, { immediate: true })
 
-// 消息变化时自动保存（防抖，避免频繁保存）
-// 优化：仅监听数组长度和最后一条消息，避免深度监听导致性能问题
 let saveDebounceTimer: any = null
 watch([
   () => messages.value.length,
   () => messages.value[messages.value.length - 1]?.content
 ], () => {
   if (messages.value.length > 0) {
-    // 清除之前的定时器
     if (saveDebounceTimer) clearTimeout(saveDebounceTimer)
-    // 300ms 后保存
     saveDebounceTimer = setTimeout(() => {
       saveCurrentSession()
     }, 300)
@@ -1221,6 +1161,7 @@ watch([
 </script>
 
 <style scoped>
+/* Main Panel */
 .assistant-panel { 
   display: flex; 
   flex-direction: column; 
@@ -1268,23 +1209,22 @@ watch([
 .bubble { max-width: 80%; padding: 8px 10px; border-radius: 8px; }
 .bubble-text { margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--el-text-color-primary); user-select: text; cursor: text; }
 
-/* Markdown 渲染样式 */
+/* Markdown Style */
 .bubble-markdown { 
   font-size: 13px;
   line-height: 1.6;
   font-family: 、"Segoe UI",  "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: var(--el-text-color-primary);
-  user-select: text;  /* 允许选中文本 */
-  cursor: text;  /* 显示文本光标 */
+  user-select: text;
+  cursor: text;
 }
 
-/* XMarkdown 内部元素也允许选中 */
 .bubble-markdown :deep(*) {
   user-select: text !important;
 }
 
 
-/* 用户消息白色主题适配 */
+/* User message white text */
 .msg.user .bubble-markdown :deep(*) { 
   color: var(--el-color-white) !important; 
 }
@@ -1312,7 +1252,7 @@ watch([
   border-top: 1px solid var(--el-border-color-light); 
 }
 
-/* 引用卡片工具栏 - 固定高度，更紧凑 */
+/* Inject Toolbar */
 .inject-toolbar { 
   display: flex; 
   align-items: flex-start; 
@@ -1320,38 +1260,36 @@ watch([
   gap: 8px; 
   padding-bottom: 6px; 
   min-height: 28px;
-  max-height: 64px; /* 稍微增加高度容纳两行 + 间距 */
+  max-height: 64px;
 }
 
 .inject-toolbar .chips { 
   display: flex; 
-  align-items: flex-start; /* 改为顶部对齐 */
+  align-items: flex-start;
   gap: 6px; 
   flex: 1;
   overflow: hidden;
-  max-height: 58px; /* 限制最多两行（24px×2 + 6px间距 + 4px余量） */
+  max-height: 58px;
 }
 
-/* 标签显示区（可换行，整齐排列） */
 .chips-tags {
   display: flex;
-  align-items: flex-start; /* 顶部对齐 */
-  gap: 6px; /* 统一间距 */
-  row-gap: 6px; /* 行间距 */
+  align-items: flex-start;
+  gap: 6px;
+  row-gap: 6px;
   flex-wrap: wrap;
   flex: 1;
   overflow: hidden;
   line-height: 1.2;
-  align-content: flex-start; /* 多行时从顶部开始排列 */
-  min-height: 24px; /* 至少一行的高度 */
+  align-content: flex-start;
+  min-height: 24px;
 }
 
-/* 更多按钮区（固定显示） */
 .chips-more {
-  flex-shrink: 0; /* 不允许收缩 */
+  flex-shrink: 0;
   display: flex;
-  align-items: flex-start; /* 与标签顶部对齐 */
-  padding-top: 2px; /* 微调对齐 */
+  align-items: flex-start;
+  padding-top: 2px;
 }
 
 .chip-tag { 
@@ -1360,12 +1298,12 @@ watch([
   height: 24px !important;
   line-height: 22px !important;
   padding: 0 8px !important;
-  margin: 0; /* 移除上下边距，使用 gap 统一间距 */
-  flex-shrink: 0; /* 防止标签被压缩 */
-  white-space: nowrap; /* 防止标签内文字换行 */
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-/* 输入框样式 */
+/* Composer Input */
 .composer-input {
   flex: 1;
   min-height: 90px;
@@ -1387,7 +1325,7 @@ watch([
   border: 1px dashed var(--el-color-primary);
   border-radius: 4px;
   flex-shrink: 0;
-  margin: 0; /* 与标签对齐 */
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -1409,14 +1347,13 @@ watch([
   opacity: 0.85;
 }
 
-/* 添加引用按钮 */
 .add-ref-btn {
   flex-shrink: 0;
-  align-self: flex-start; /* 顶部对齐 */
-  margin-top: 2px; /* 微调对齐 */
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
-/* 更多引用 Popover */
+/* More Refs Popover */
 .more-refs-popover {
   padding: 0;
 }
@@ -1497,7 +1434,7 @@ watch([
 ::deep(.composer .el-button) { padding: 6px 8px; font-size: 12px; }
 ::deep(.inject-toolbar .el-button) { padding: 4px 8px !important; font-size: 12px; height: 24px; }
 
-/* ⏳ 正在调用工具的临时提示样式 */
+/* Tool in progress */
 .tools-in-progress {
   margin-top: 8px;
   max-width: 80%;
@@ -1532,7 +1469,7 @@ watch([
   color: var(--el-color-warning-dark-2);
 }
 
-/* 工具调用相关样式（醒目设计） */
+/* Tool Summary */
 .tools-summary {
   margin-top: 8px;
   max-width: 80%;
@@ -1647,14 +1584,13 @@ watch([
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
-/* 旧样式（兼容性保留） */
 .tool-msg {
   color: var(--el-text-color-regular);
   font-size: 12px;
   flex: 1;
 }
 
-/* 历史对话抽屉样式 */
+/* History Drawer */
 .history-drawer-content {
   display: flex;
   flex-direction: column;
@@ -1734,4 +1670,4 @@ watch([
   font-size: 11px;
   color: var(--el-text-color-secondary);
 }
-</style> 
+</style>

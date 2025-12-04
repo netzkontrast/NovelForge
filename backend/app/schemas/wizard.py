@@ -1,7 +1,10 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Optional, List, Tuple, Any, Union
 
-from .entity import CharacterCard as CharacterCard  # 以完整角色卡替换简化模型
+from pydantic import BaseModel, Field, model_validator
+from typing import Literal, Optional, List, Tuple, Any, Union
+
+from .entity import CharacterCard as CharacterCard  # Replace simplified model with complete character card
 from .entity import SceneCard as SceneCard
 from .entity import OrganizationCard as OrganizationCard
 from .entity import EntityType as EntityType
@@ -11,78 +14,78 @@ from .entity import EntityType as EntityType
 
 class Tags(BaseModel):
     """
-    统一的标签模型。
+    Unified Tag Model.
     """
-    theme: str = Field(default="", description="主题类别，格式: 大类-子类")
-    audience: Literal['通用','男生', '女生'] = Field(default='通用', description="目标读者")
-    narrative_person: Literal['第一人称', '第三人称'] = Field(default='第三人称', description="写作人称（第一人称/第三人称）")
-    story_tags: List[Tuple[str, Literal['低权重', '中权重', '高权重']]] = Field(default=[], description="类别标签及权重档位（低/中/高）")
-    affection: str = Field(default="", description="情感关系标签")
+    theme: str = Field(default="", description="Theme category, format: Main-Sub")
+    audience: Literal['通用','男生', '女生'] = Field(default='通用', description="Target audience (General/Male/Female)")
+    narrative_person: Literal['第一人称', '第三人称'] = Field(default='第三人称', description="Narrative perspective (First/Third)")
+    story_tags: List[Tuple[str, Literal['低权重', '中权重', '高权重']]] = Field(default=[], description="Category tags and weight levels (Low/Medium/High)")
+    affection: str = Field(default="", description="Emotional relationship tag")
 
 
 class SpecialAbility(BaseModel):
-    name: str = Field(description="金手指的名称")
-    description: str = Field(description="金手指的具体描述")
+    name: str = Field(description="Name of the special ability/cheat")
+    description: str = Field(description="Detailed description of the special ability")
 
 
 class SpecialAbilityResponse(BaseModel):
-    """0: 根据tags设计金手指的请求模型"""
-    special_abilities_thinking: str = Field(description="从标签到金手指的创作思考过程。",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：根据标签“重生”和“无敌流”，我需要设计一个让主角能够不断尝试、不断变强，最终达到无敌状态的金手指。仅仅重生一次不足以支撑“无敌流”的长期发展，因此，将“重生”特性深化为“无限复活并回溯时间”的能力，每次复活都能保留经验和记忆，这既符合“重生”的特点，又能为主角的“无敌”之路提供逻辑支撑。同时，结合“异世大陆”和“文明推演”的背景，这种能力能够让主角在面对未知世界时，通过反复试错来积累知识和经验，从而实现降维打击，迅速崛起。这个金手指的设定，能够让读者对主角如何利用这种能力解决困境、颠覆旧秩序产生强烈的期待感。"])
-    special_abilities: Optional[List[SpecialAbility]] = Field(None, description="主要金手指信息。金手指可以是各种系统、模拟器等这种具体的，也可以是某种优势/天赋/体质等，例如主角重生或者穿越，那么ta的先知先觉也是一种金手指。")
+    """0: Request model for designing special ability based on tags"""
+    special_abilities_thinking: str = Field(description="Creative thinking process from tags to special ability.",examples=["Sample output, for learning thinking process only, do not be influenced by specific content: Based on tags 'Rebirth' and 'Invincible Flow', I need to design a cheat that allows the protagonist to constantly try and become stronger, eventually reaching an invincible state. Simply rebirth once is not enough to support the long-term development of 'Invincible Flow', so deepen the 'Rebirth' feature into 'Infinite Resurrection and Time Regression' ability, retaining experience and memory each resurrection. This fits 'Rebirth' and provides logical support for protagonist's 'Invincible' path. Also combining 'Otherworld Continent' and 'Civilization Deduction' background, this ability allows protagonist to accumulate knowledge and experience through repeated trial and error when facing unknown world, achieving dimensional strike and rising rapidly. This cheat setting can create strong expectation for readers on how protagonist uses this ability to solve dilemmas and overturn old order."])
+    special_abilities: Optional[List[SpecialAbility]] = Field(None, description="Main special ability info. Can be specific systems, simulators etc., or some advantage/talent/physique etc. e.g. protagonist rebirth or time travel, their foreknowledge is also a cheat.")
 
 
 class OneSentence(BaseModel):
-    """1: 根据tags、金手指设计一句话概述的请求模型"""
-    one_sentence_thinking: str = Field(description="从标签/金手指到一句话概述的创作思考过程。",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：考虑到'玄幻奇幻-异世大陆'的主题和'穿越'、'异界科学流'等标签，我首先需要构建一个跨世界的故事框架。现代剑道高手与异世界魔法师的相遇是个很好的切入点，'禁忌魔法传送门'金手指为这一相遇提供了合理契机。同时，'单CP'的情感标签要求这段关系要成为故事的重要线索。'文明碰撞'和'异界科学流'标签则提示要让主角带来现代世界的知识优势，形成独特的冲突和看点。综合这些元素，我决定构建一个关于现代人进入魔法世界，通过知识优势与个人成长影响整个异界命运的故事。"])
-    one_sentence: str = Field(description="一句话概述整本小说内容")
+    """1: Request model for designing one-sentence summary based on tags and special ability"""
+    one_sentence_thinking: str = Field(description="Creative thinking process from tags/special ability to one-sentence summary.",examples=["Sample output, for learning thinking process only: Considering 'Fantasy-Otherworld Continent' theme and 'Time Travel', 'Otherworld Science Flow' tags, I first need to build a cross-world story framework. Modern kendo master meeting otherworld mage is a good entry point, 'Forbidden Magic Portal' cheat provides reasonable opportunity. Also 'Single CP' emotional tag requires this relationship to be an important clue. 'Civilization Collision' and 'Otherworld Science Flow' tags suggest protagonist brings modern knowledge advantage, forming unique conflict and spectacle. Combining these elements, I decided to build a story about modern person entering magic world, influencing entire otherworld fate through knowledge advantage and personal growth."])
+    one_sentence: str = Field(description="One sentence summary of the entire novel")
 
 
 class ParagraphOverview(BaseModel):
-    """2: 根据一句话概述等信息扩充为一段话概述的请求模型"""
-    overview_thinking: str = Field(description="从一句话概述到一段话大纲的创作思考过程。",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：基于一句话概述，进一步思考故事的具体展开。从'穿越'标签出发，需要交代主角穿越后的身份转变和初始困境。'反派流'和'幕后流'决定了主角必须采取非传统的反派手段。'种田流'提示要详细描写魔族社会发展过程。'傲慢天赋'金手指则提供了主角解决问题的独特方式。整个故事需要展现出主角如何利用现代思维和智谋，在有限时间内完成魔族改造和人类世界的和平渗透。"])
-    overview: str = Field(description="扩展后的小说大纲")
+    """2: Request model for expanding one-sentence summary to paragraph overview"""
+    overview_thinking: str = Field(description="Creative thinking process from one-sentence summary to paragraph outline.",examples=["Sample output, for learning thinking process only: Based on one-sentence summary, further think about specific story unfolding. Starting from 'Time Travel' tag, need to explain protagonist's identity change and initial dilemma. 'Villain Flow' and 'Behind-the-scenes Flow' determine protagonist must use non-traditional villain means. 'Farming Flow' suggests detailed description of demon society development process. 'Arrogance Talent' cheat provides unique way for protagonist to solve problems. The whole story needs to show how protagonist uses modern thinking and resourcefulness to complete demon transformation and peaceful infiltration of human world within limited time."])
+    overview: str = Field(description="Expanded novel outline")
     
 
 # --- Simplified AI Request Model ---
 
 class SimpleAIRequest(BaseModel):
-    """简化的AI请求模型，直接传递字符串输入"""
-    input_text: str = Field(description="按照训练数据格式构造的字符串输入")
-    llm_config_id: Optional[int] = Field(default=1, description="LLM配置ID")
-    prompt_name: Optional[str] = Field(description="提示词名称，如不指定则使用task名称")
-    response_model_name: Optional[str] = Field(description="响应模型名称")
+    """Simplified AI request model, directly passing string input"""
+    input_text: str = Field(description="String input constructed according to training data format")
+    llm_config_id: Optional[int] = Field(default=1, description="LLM Config ID")
+    prompt_name: Optional[str] = Field(description="Prompt name, use task name if not specified")
+    response_model_name: Optional[str] = Field(description="Response model name")
 
 
 
 class SocialSystem(BaseModel):
-    power_structure: str = Field(description="权力架构（如：封建王朝/资本联邦）")
-    currency_system: List[str] = Field(default=["金币"], description="货币体系")
-    background:List[str]=Field(description="该社会体系的势力格局背景、历史传说等")
-    major_power_camps: List[OrganizationCard] = Field(description="主要组织/门派/势力阵营，仅在此生成跨卷长期影响的核心组织。")
-    civilization_level: Optional[str] = Field(description="科技/文明发展水平")
+    power_structure: str = Field(description="Power structure (e.g., Feudal Dynasty/Capital Federation)")
+    currency_system: List[str] = Field(default=["Gold Coin"], description="Currency system")
+    background:List[str]=Field(description="Power structure background, history legends etc. of this social system")
+    major_power_camps: List[OrganizationCard] = Field(description="Major organizations/sects/factions, generate core organizations with cross-volume long-term influence only here.")
+    civilization_level: Optional[str] = Field(description="Technology/Civilization development level")
 
 class CoreSystem(BaseModel):
-    system_type: str = Field(description="体系类型（力量/社会/科技/异能等）")
-    name: str = Field(description="体系名称（如：斗气/资本规则/朝堂权谋）")
-    levels: Optional[List[str]] = Field(None, description="等级/阶层划分（可选）")
-    source: str = Field(description="能量/权力来源（如：灵气/资本/皇权）")
+    system_type: str = Field(description="System type (Power/Social/Tech/Ability etc.)")
+    name: str = Field(description="System name (e.g. Douqi/Capital Rules/Court Politics)")
+    levels: Optional[List[str]] = Field(None, description="Level/Class division (Optional)")
+    source: str = Field(description="Source of Energy/Power (e.g. Reiki/Capital/Imperial Power)")
 
 class SettingItem(BaseModel):
-    title: str = Field(description="设定标题，例如：地理宇宙观、历史传说、种族设定等")
-    description: str = Field(description="该项设定的具体描述")
+    title: str = Field(description="Setting title, e.g.: Geography Cosmology, History Legends, Race Settings etc.")
+    description: str = Field(description="Specific description of this setting item")
 
 class WorldviewTemplate(BaseModel):
     """
-    世界观模板
+    Worldview Template
     """
-    world_name: str = Field(min_length=2, description="世界名称")
-    core_conflict: str = Field(description="世界核心矛盾（如：资源争夺/种族仇恨）")
-    social_system: SocialSystem = Field(description="社会体系")
-    power_systems: List[CoreSystem] = Field(default=[],description="核心体系列表，可包含力量/科技/异能等多种体系，避免设定过于复杂，最多设置两种体系。若是现实/历史等写实题材，则可置为空",max_length=2)
-    # key_settings: Optional[List[SettingItem]] = Field(description="其他关键世界观设定（可选）")
+    world_name: str = Field(min_length=2, description="World Name")
+    core_conflict: str = Field(description="World core conflict (e.g. Resource Scramble/Racial Hatred)")
+    social_system: SocialSystem = Field(description="Social System")
+    power_systems: List[CoreSystem] = Field(default=[],description="Core system list, can include power/tech/ability etc., avoid overly complex settings, max 2 systems. If realistic/historical genre, can be empty",max_length=2)
+    # key_settings: Optional[List[SettingItem]] = Field(description="Other key worldview settings (Optional)")
 
 class WorldBuilding(BaseModel):
-    world_view_thinking: str = Field(description="世界观设计的思考过程",examples=["示例输出，仅用于学习思考方式，不要被具体内容影响：在设计世界观时，我希望构建一个既贴近现实又充满科幻想象力的框架。首先，为了让读者有代入感，我选择将故事背景设定在现代都市，这样主角的特殊能力与日常生活的冲突会更具张力。但仅仅是现代都市显然不够支撑“时空穿越”的主题，因此，我引入了“梦境”作为连接现实与未来的桥梁。这个梦境世界，最初是现实的映射，但随着主角的干预，它会发生剧烈变化，甚至出现“旧海”和“新海市”这种未来世界的差异，这为世界观增添了层次感和探索空间。为了解释这种变化，我需要一套严谨的时空法则，比如“时空蝴蝶效应”、“历史线修正”等，这些法则不仅解释了梦境与现实的互动，也为剧情的推进和冲突的产生提供了逻辑基础。同时，为了承载“文明推演”和“异界科学流”的标签，我构思了一个隐藏在幕后的组织，他们掌握着超越时代的科技和对时空法则的深刻理解，他们的存在是世界核心矛盾的体现——即关于历史走向的掌控权。社会体系上，现实世界是现代社会，而未来梦境则可能呈现出科技高度发达但社会畸形（如积分至上）或末日废土（如辐射灾害）的多种面貌，这种对比能增强故事的深度和警示意义。核心驱动体系上，除了主角的梦境能力，还需要有“超时空粒子”等科学概念作为力量来源和理论支撑，使得整个世界观在科幻的框架下显得自洽且充满探索潜力。"])
+    world_view_thinking: str = Field(description="Worldview design thinking process",examples=["Sample output, for learning thinking process only: When designing worldview, I hope to build a framework that is both close to reality and full of sci-fi imagination. First, for reader immersion, I choose to set story background in modern city, so conflict between protagonist's special ability and daily life will have more tension. But modern city alone is not enough to support 'Space-Time Travel' theme, so I introduce 'Dream World' as bridge between reality and future. This dream world is initially a reflection of reality, but with protagonist's intervention, it changes drastically, even appearing 'Old Sea' and 'New Mirage City' differences, adding layers and exploration space to worldview. To explain this change, I need rigorous space-time laws, like 'Space-Time Butterfly Effect', 'Timeline Correction' etc. These laws not only explain interaction between dream and reality, but also provide logical basis for plot advancement and conflict generation. Also to carry 'Civilization Deduction' and 'Otherworld Science Flow' tags, I conceive a hidden organization behind scenes, mastering technology beyond era and deep understanding of space-time laws. Their existence is embodiment of world core conflict - control over historical direction. In social system, real world is modern society, while future dream might present highly developed tech but deformed society (like points supremacy) or apocalyptic wasteland (like radiation disaster), this contrast enhances story depth and warning significance. Core drive system, besides protagonist's dream ability, needs 'Super-Space-Time Particles' scientific concepts as power source and theoretical support, making entire worldview self-consistent and full of exploration potential under sci-fi framework."])
     world_view: WorldviewTemplate
 
 
@@ -90,93 +93,93 @@ class WorldBuilding(BaseModel):
 
 
 class Blueprint(BaseModel):
-    volume_count: int = Field(description="预期小说的分卷数,通常设置为3~6卷")
-    character_thinking: str = Field(description="角色设计思考过程",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：在设计角色时，我秉持着“多样性与互补性”的原则，确保每个核心角色都能在故事中发挥独特的作用，并与主角团形成紧密的联系。\n\n首先是主角王小明。他作为“穿越者”，必须具备现代人的思维和适应能力。我设定他是一名剑道高手，这既能让他快速融入异世界，又能与异世界的“剑术”体系相呼应。他的核心驱动力是“高额酬金”和“守护海雯”，这让他从一个旁观者逐渐转变为异世界的参与者和守护者。他的成长弧光将是“从现实世界的普通人到异世界的救世主”，这与“进化流”的标签紧密相连。\n\n女主角海雯是故事的引路人。她必须是异世界的核心人物，拥有强大的魔法天赋和独特的背景。我设定她是“天才魔法师”和“王族联姻的逃犯”，这为她提供了最初的困境和行动动机。她与主角的“闪婚”设定，迅速确立了他们的CP关系，也为后续的情感发展奠定了基础。她的核心驱动力是“逃避联姻”和“拯救世界”，这让她在个人命运与世界命运之间找到了平衡点。她的角色弧光是“从逃亡者到拯救世界的王宫魔法师”，展现了她的成长与担当。\n\n希斯作为主要反派，必须强大且神秘。我设定她是“海雯的姑姑”和“邪恶魔法师”，这种亲缘关系增加了故事的复杂性和情感张力。她的核心动机是“毁灭世界”，这与失落文明的诅咒紧密相关。她的角色弧光是“从天才魔法师到毁灭者，最终选择离开”，为故事的结局增添了悲剧色彩。\n\n林晓雪则作为连接现实世界的桥梁，她的“学霸”设定让她能够为异世界提供现代知识，体现“异界科学流”和“文明碰撞”的标签。\n\n通过这些角色的设计，我希望构建一个充满张力、情感丰富、并能共同推动宏大叙事的角色群像。"])
-    character_cards: List[CharacterCard] = Field(description="核心角色卡片列表，仅在此生成跨卷长期影响的核心角色")
+    volume_count: int = Field(description="Expected number of volumes, usually 3~6 volumes")
+    character_thinking: str = Field(description="Character design thinking process",examples=["Sample output, for learning thinking process only: In designing characters, I uphold 'Diversity and Complementarity' principle, ensuring each core character plays unique role and forms close connection with protagonist group.\n\nFirst is protagonist Wang Xiaoming. As 'Time Traveler', must have modern thinking and adaptability. I set him as Kendo master, allowing fast integration into otherworld and echoing otherworld 'Swordsmanship' system. His core drive is 'High Reward' and 'Protecting Haiwen', transforming him from bystander to participant and guardian. His growth arc will be 'From ordinary person in reality to savior in otherworld', closely linked to 'Evolution Flow' tag.\n\nHeroine Haiwen is story guide. Must be core figure in otherworld, with strong magic talent and unique background. I set her as 'Genius Mage' and 'Royal Marriage Fugitive', providing initial dilemma and motivation. Her 'Flash Marriage' with protagonist quickly establishes CP relationship and lays foundation for emotional development. Her core drive is 'Escape Marriage' and 'Save World', finding balance between personal and world fate. Her character arc is 'From fugitive to Royal Court Mage saving world', showing her growth and responsibility.\n\nHeath as main villain, must be powerful and mysterious. I set her as 'Haiwen's Aunt' and 'Evil Mage', kinship adds complexity and emotional tension. Her core motivation is 'Destroy World', related to curse of lost civilization. Her character arc is 'From genius mage to destroyer, finally choosing to leave', adding tragic color to ending.\n\nLin Xiaoxue acts as bridge to real world, her 'Scholar' setting allows providing modern knowledge to otherworld, reflecting 'Otherworld Science Flow' and 'Civilization Collision' tags.\n\nThrough these character designs, I hope to build a character ensemble full of tension, rich emotion, and jointly driving grand narrative."])
+    character_cards: List[CharacterCard] = Field(description="Core character card list, generate core characters with cross-volume long-term influence only here")
     
-    # organization_thinking:str=Field(description="组织/势力/阵营设计思考过程，注意与scene区分")
-    # organization_cards: List[OrganizationCard] = Field(description="核心组织/势力/阵营卡片列表，仅在此生成跨卷长期影响的核心组织。注意与scene_cards区分")
+    # organization_thinking:str=Field(description="Organization/Faction/Camp design thinking process, distinguish from scene")
+    # organization_cards: List[OrganizationCard] = Field(description="Core Organization/Faction/Camp card list, generate core organizations with cross-volume long-term influence only here. Distinguish from scene_cards")
     
-    scene_thinking: str = Field(description="场景设计思考过程",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：在设计地图和场景时，我遵循了从局部到全局、从已知到未知、层层递进的原则，以确保故事的节奏感和世界观的逐步展开。我的核心思路是：每个场景不仅是故事发生的地点，更是推动剧情、展现角色成长、揭示世界观秘密的关键。\n\n**第一卷：初入异世与初步探索**\n我首先设置了蓝星（现实世界）作为故事的起点和主角的“已知世界”，这让读者有代入感。然后通过“墨兰塔”和“兰特王国(明月城)”引入异世界的核心地域，这里是魔法与剑并存的典型场景，也是初期冲突的爆发点。墨兰塔作为魔法师的圣地，既是海雯的背景，也为主角学习魔法提供了场所。明月城则代表了异世界的政治中心和战争前线。这些场景的作用是让主角初步适应异世界，展现其适应能力和初步实力提升，并引出主要势力。\n\n**第二卷：势力发展与联盟建立**\n随着剧情发展，我需要更广阔的舞台来展现主角团的势力扩张和宏大计划。因此，引入“兰特王国（惊鸿之城）”作为新的盟友基地，这里将成为公主复国和建立同盟的战略中心。同时，为了展现战争的全面性，我设计了“高栏联邦（临崖城/中部哨塔/日出山）”作为重要的战场和政治博弈地，通过这里的冲突来推动联盟的形成。解放“明月城”则是这一卷的高潮，标志着复国计划的关键一步。这些场景的作用是让主角团从被动应战转变为主动出击，展现其战略眼光和领导力，并促成同盟的建立。\n\n**第三卷：统一战争与古老秘密的揭示**\n进入第三卷，故事重心转向统一异世界大陆和揭示更深层次的秘密。因此，我将场景扩展到“日月国”和“圣瓦伦帝国（特西斯丁堡）”。日月国是联军推进的必经之地，通过这里的战役展现主角团的强大力量。圣瓦伦帝国首都“特西斯丁堡”是最终决战的地点，它的陷落标志着旧秩序的终结。这些场景的作用是完成统一大业，同时揭示世界观的深层秘密，为最终的危机埋下伏笔。\n\n**第四卷：末日危机与最终抉择**\n最后一卷，世界面临毁灭，场景设计围绕“拯救”和“终结”展开。“临崖城”和“惊鸿之城”再次出现，但这次它们承载的是收集王族之血和科技求生的希望。最终的“起源之地/燃烧的山巅”是决战的舞台，这里是诅咒的源头，也是解咒的关键。这些场景的作用是集中所有线索，完成最终的救赎，并让主角团做出关于归属的最终选择，为整个故事画上句号。"])
-    scene_cards: List[SceneCard] = Field(description="主要地图/场景/副本卡片列表，仅在此生成跨卷长期影响的核心地图/场景。注意与organization_cards联系，例如某个地图是某个组织/势力的活动范围则需要标明。")
+    scene_thinking: str = Field(description="Scene design thinking process",examples=["Sample output, for learning thinking process only: When designing map and scenes, I follow principle of local to global, known to unknown, progressive layering, ensuring story rhythm and gradual unfolding of worldview. Core idea: Each scene is not just location, but key to driving plot, showing character growth, revealing worldview secrets.\n\n**Volume 1: First Entry & Initial Exploration**\nI first set Blue Star (Real World) as starting point and protagonist's 'Known World' for reader immersion. Then introduce otherworld core region via 'Molanta' and 'Lante Kingdom (Moon City)', typical scenes of magic and sword, also initial conflict point. Molanta as mage sanctuary is Haiwen's background and place for protagonist magic learning. Moon City represents political center and war frontline. These scenes let protagonist adapt to otherworld, show adaptability and initial strength improvement, and introduce main factions.\n\n**Volume 2: Faction Development & Alliance Building**\nWith plot development, need broader stage to show protagonist group expansion and grand plan. So introduce 'Lante Kingdom (Jinghong City)' as new ally base, becoming strategic center for princess restoration and alliance building. Also to show war comprehensiveness, I design 'Gaolan Federation (Linya City/Central Watchtower/Sunrise Mountain)' as important battlefield and political gaming ground, driving alliance formation through conflicts here. Liberating 'Moon City' is climax of this volume, marking key step in restoration plan. These scenes shift protagonist group from passive defense to active attack, showing strategic vision and leadership, facilitating alliance.\n\n**Volume 3: Unification War & Ancient Secrets Revealed**\nEntering Volume 3, story focus shifts to unifying continent and revealing deeper secrets. So expand scenes to 'Sun Moon Kingdom' and 'Saint Valen Empire (Tesistineburg)'. Sun Moon Kingdom is must-pass for coalition, showing protagonist group power through battles here. Empire capital 'Tesistineburg' is final battle location, its fall marks end of old order. These scenes complete unification cause, revealing deep worldview secrets, foreshadowing final crisis.\n\n**Volume 4: Doomsday Crisis & Final Choice**\nLast volume, world faces destruction, scene design revolves around 'Save' and 'End'. 'Linya City' and 'Jinghong City' reappear, but carrying hope of collecting royal blood and tech survival. Final 'Origin Place/Burning Peak' is decisive battle stage, source of curse and key to breaking it. These scenes concentrate all clues, complete final redemption, and let protagonist group make final choice on belonging, concluding the story."])
+    scene_cards: List[SceneCard] = Field(description="Main Map/Scene/Dungeon card list, generate core map/scene with cross-volume long-term influence only here. Note connection with organization_cards, e.g. if a map is activity range of an organization, specify it.")
 
 
 # === Step 4: Volume Outline Schemas===
 
 class CharacterAction(BaseModel):
-    """角色卡，涵盖了各种信息"""
-    name: Optional[str] = Field(default="", description="角色名称")
-    description: Optional[str] = Field(default="", description="以第一视角讲述该角色在这卷内的主要事迹")
+    """Character Card, covering various info"""
+    name: Optional[str] = Field(default="", description="Character name")
+    description: Optional[str] = Field(default="", description="Narrate main deeds of this character in this volume from first person perspective")
 
 class StoryLine(BaseModel):
-    """故事线信息，来自 primitive_models/Step2Model.py"""
-    story_type: Optional[Literal['主线', '辅线']] = Field(default='主线', description="故事线类型")
-    name: Optional[str] = Field(default="", description="用一个简单的名称表示该线")
-    overview: Optional[str] = Field(default="", description="故事线内容概述，需要详略得当，涉及到的所有场景、角色等元素都应在这个概述中体现到。")
+    """Story line info, from primitive_models/Step2Model.py"""
+    story_type: Optional[Literal['主线', '辅线']] = Field(default='主线', description="Story line type (Main/Branch)")
+    name: Optional[str] = Field(default="", description="Use a simple name to represent this line")
+    overview: Optional[str] = Field(default="", description="Story line content overview, be concise, all involved scenes, characters etc. should be reflected in this overview.")
 
 
 class VolumeOutline(BaseModel):
     """
-    分卷大纲的核心数据模型
+    Core data model for Volume Outline
     """
-    volume_number: Optional[int] = Field(default=1, description="第几卷")
-    thinking: Optional[str] = Field(default="", description="根据提供的世界观、人物、地图/副本,思考本卷要如何展开,需要设计什么主线/辅线?如何推动剧情发展?",examples=["示例输出，仅供学习思考方式，不要被具体内容影响：本卷作为开篇，我的核心思考是如何迅速确立主角“无限复活”的金手指特性，并将其与残酷的异世大陆背景相结合，制造强烈的生存压迫感，从而驱动主角从绝境中崛起。我需要设计一个循序渐进的成长路径，让主角从一个濒死之人，通过每次复活积累经验和知识，逐步适应环境，并最终在A市站稳脚跟，积累原始资本，建立初步势力。同时，为了后续的宏大叙事，我必须在这一卷中埋下世界观的伏笔，例如社会阶层的固化、更高文明的操控等，通过主角的视角逐步揭示。在人物塑造上，我将引入一群性格各异的伙伴，他们既是主角的助力，也能通过他们的视角反衬主角的强大和特殊。爽点方面，主角利用金手指的“先知”优势，在股市和冒险中实现降维打击，以及最终对早期反派的复仇，都将是重要的爽点设计。"])
-    main_target: StoryLine = Field(description="根据thinking设计主线目标,要让主角发展到什么地步?需描述准确数据")
-    branch_line: Optional[List[StoryLine]] = Field(default=[], description="该卷的辅线或支线,包含1~3条核心辅线")
-    character_thinking: Optional[str] = Field(default="", description="结合overview、提供的角色信息,如性格、核心驱动力、角色弧光等,思考在该卷要驱动角色实体们做什么事?要让哪些角色出场?是否要引入辅助角色?",examples=["示例输出，仅学习思考方式，不要被具体内容影响：在本卷中，我将重点驱动主角，让他充分利用“无限复活”的能力，从一个绝境中的幸存者，逐步成长为A市的领袖。他将通过反复试错来学习战斗技巧、社会规则，并利用信息差在股市中快速积累财富。我还需要引入孙清雨、王火、韩天等核心配角，让他们在主角的成长过程中扮演重要的辅助角色：孙清雨作为主角的第一个伙伴和忠实追随者，将见证并参与主角的早期崛起；王火则提供技术支持，并成为主角“复活”秘密的知情人；韩天则在装备改造和技术研发上提供关键帮助。这些角色的出场和互动，不仅能推动剧情发展，也能丰富主角的人设，展现他智谋超群、善于利用资源的特点。同时，林森作为本卷的主要反派，将是主角初期反抗旧秩序的具象化目标，他的存在将不断刺激主角变强和复仇。"])
-    new_character_cards: Optional[List[CharacterCard]] = Field(default=None, description="如有新增关键角色，在此补充其信息，life_span为短期。非必要尽量不引入新角色")
-    new_scene_cards: Optional[List[SceneCard]]= Field(default=None, description="如有新增关键场景/地图/副本，在此补充其信息，life_span为短期，非必要尽量不引入新场景")
-    # stage_lines: Optional[List[StageLine]] = Field(default=[], description="设计该卷的详细故事脉络，按阶段来划分，注意切分故事阶段时详略得当，每个阶段章节跨度不要太大,最好不超过30章")
-    stage_count:int=Field(description="预期该卷的阶段剧情，将该卷的剧情分为n个阶段来叙述，通常为4~6个")
-    character_action_list: Optional[List[CharacterAction]] = Field(default=[], description="根据卷内设计，概述关键角色实体的行动与变化")
-    entity_snapshot: Optional[List[str]] = Field(default=[], description="卷末时，关键实体（角色为主）快照状态信息，，包括等级/修为境界、财富、功法等准确信息，以便收束剧情")
+    volume_number: Optional[int] = Field(default=1, description="Volume Number")
+    thinking: Optional[str] = Field(default="", description="Based on provided worldview, characters, maps/dungeons, think how to unfold this volume, what main/branch lines to design? How to drive plot development?",examples=["Sample output, for learning thinking process only: As opening volume, my core thinking is how to quickly establish protagonist's 'Infinite Resurrection' cheat feature, combine it with cruel otherworld background, create strong survival pressure, driving protagonist to rise from desperation. I need to design a progressive growth path, let protagonist start from dying person, accumulate experience and knowledge through each resurrection, gradually adapt to environment, finally stand firm in City A, accumulate primitive capital, establish initial power. Meanwhile for subsequent grand narrative, must bury worldview foreshadowing in this volume, e.g. social solidification, higher civilization manipulation, revealed gradually through protagonist view. In character building, introduce group of partners with different personalities, they are protagonist's help and contrast protagonist's strength and uniqueness. In terms of satisfaction points, protagonist using cheat 'foreknowledge' advantage to achieve dimensional strike in stock market and adventure, and final revenge on early villains, will be important design points."])
+    main_target: StoryLine = Field(description="Design main line target based on thinking, to what extent should protagonist develop? Need accurate data description")
+    branch_line: Optional[List[StoryLine]] = Field(default=[], description="Branch or side lines of this volume, include 1~3 core branch lines")
+    character_thinking: Optional[str] = Field(default="", description="Combine overview, provided character info (personality, core drive, arc etc.), think what to drive character entities to do in this volume? Which characters to appear? Need auxiliary characters?",examples=["Sample output, for learning thinking process only: In this volume, I will focus on driving protagonist to fully use 'Infinite Resurrection' ability, growing from survivor in desperation to leader of City A. He will learn combat skills, social rules through repeated trial and error, and use information gap to accumulate wealth in stock market. I also need to introduce Sun Qingyu, Wang Huo, Han Tian as core supporting roles, playing important auxiliary roles in protagonist growth: Sun Qingyu as first partner and loyal follower, witnessing and participating in early rise; Wang Huo providing tech support and knowing 'Resurrection' secret; Han Tian providing key help in equipment modification and R&D. Their appearance and interaction drive plot and enrich protagonist persona, showing his intelligence and resourcefulness. Lin Sen as main villain of this volume, will be concrete target of protagonist's initial resistance against old order, constantly stimulating protagonist to become stronger and revenge."])
+    new_character_cards: Optional[List[CharacterCard]] = Field(default=None, description="If new key characters added, supplement info here, life_span is short-term. Avoid introducing new characters if unnecessary")
+    new_scene_cards: Optional[List[SceneCard]]= Field(default=None, description="If new key scenes/maps/dungeons added, supplement info here, life_span is short-term. Avoid introducing new scenes if unnecessary")
+    # stage_lines: Optional[List[StageLine]] = Field(default=[], description="Design detailed story context of this volume, divided by stages, pay attention to appropriate detail when cutting story stages, each stage chapter span not too large, best not exceed 30 chapters")
+    stage_count:int=Field(description="Expected stage plot of this volume, divide volume plot into n stages to narrate, usually 4~6")
+    character_action_list: Optional[List[CharacterAction]] = Field(default=[], description="Outline key character entity actions and changes based on volume design")
+    entity_snapshot: Optional[List[str]] = Field(default=[], description="At end of volume, key entity (mainly character) snapshot status info, including level/cultivation realm, wealth, techniques etc. accurate info, to conclude plot")
 
 class WritingGuide(BaseModel):
     """
-    写作指南，用于指导AI在特定卷中创作时需要注意的细节。
+    Writing Guide, used to guide AI on details to pay attention to when writing in specific volume.
     """
-    volume_number: int = Field(description="该写作指南对应的卷号")
-    content: str = Field(description="AI根据方法论生成的、用于指导本卷写作的具体内容。字数控制在1000字以内。",min_length=100)
+    volume_number: int = Field(description="Volume number corresponding to this writing guide")
+    content: str = Field(description="Specific content generated by AI based on methodology to guide writing of this volume. Word count controlled within 1000 words.",min_length=100)
 
 class ChapterOutline(BaseModel):
-    """章节大纲"""
-    volume_number: Optional[int] = Field(default=0, description="卷号，如果没有找到，则设置为0")
-    stage_number:Optional[int]=Field(default=1,description="该章节属于第几个阶段，从1开始")
-    title: Optional[str] = Field(default="", description="章节标题")
-    chapter_number: Optional[int] = Field(default=1, description="章节序号")
+    """Chapter Outline"""
+    volume_number: Optional[int] = Field(default=0, description="Volume number, if not found, set to 0")
+    stage_number:Optional[int]=Field(default=1,description="Which stage this chapter belongs to, starting from 1")
+    title: Optional[str] = Field(default="", description="Chapter Title")
+    chapter_number: Optional[int] = Field(default=1, description="Chapter Number")
    
-    overview: Optional[str] = Field(default="", description="章节主要内容概述,详略得当，避免过于单薄。如果主角有了显著的提升，则相关信息不能省略，需要准确数据描述出来(如实力大幅提升、经济或资源大幅增长了多少)。",min_length=100)
+    overview: Optional[str] = Field(default="", description="Chapter main content overview, appropriate detail, avoid being too thin. If protagonist has significant improvement, relevant info cannot be omitted, need accurate data description (e.g. strength greatly improved, economy or resources increased by how much).",min_length=100)
     entity_list: Optional[List[str]] = Field(
         default=[],
-        description="章节中出场的重要实体列表，只能从上下文提供的组织/角色/场景卡实体中选择，不得新增、自创；实体名称必须是纯名称（不得包含括号/备注）。注意,为了精简上下文，避免实体列表中出现该章节未出场的冗余实体",
+        description="List of important entities appearing in chapter, must be selected from context provided organization/character/scene card entities, no adding/creating new; entity name must be pure name (no brackets/remarks). Note, to streamline context, avoid redundant entities not appearing in this chapter in entity list",
     )
 
     
 
 class StageLine(BaseModel):
-    """故事按阶段划分的信息"""
-    volume_number:int=Field(default=1,description="该故事阶段属于第几卷")
-    stage_number:int=Field(default=1,description="该故事阶段是第几个阶段，从1开始")
-    stage_name: Optional[str] = Field(default="", description="用一个名称或一句话简单概述这个阶段")
-    reference_chapter: Tuple[int, int] = Field(description="该部分剧情的起始和结束章节号,跨度通常为10~20章左右")
-    analysis: Optional[str] = Field(default="", description="以一个经验丰富的网文写手代入作者第一人称视角,'我'是如何思考设置这部分的剧情的,该部分剧情对于分卷的主线/辅线起到什么作用?该阶段剧情的爽点是什么？末尾是否设置钩子/悬念？")
-    overview: Optional[str] = Field(default="", description="这个阶段剧情内容具体概述，需要详略得当，涉及到的主要实体，如角色、场景/地图、组织等元素都应在这个概述中体现到。另外，若主角有了显著提升（如提升了主角多少实力或地位、增长了主角多少财富或资源之类的），则相关信息需要准确数据描述，不能省略")
-    chapter_outline_list:Optional[List[ChapterOutline]]=Field(description="根据reference_chapter、overview生成所需的章节大纲")
-    entity_snapshot: Optional[List[str]] = Field(default=[], description="阶段末时，关键实体（角色为主）快照状态信息，包括等级/修为境界、财富、功法等准确信息，以便收束剧情，确保最后一个阶段时，剧情发展能够使得实体状态收束到该卷末的实体状态。")
+    """Story info divided by stage"""
+    volume_number:int=Field(default=1,description="Which volume this story stage belongs to")
+    stage_number:int=Field(default=1,description="Which stage this story stage is, starting from 1")
+    stage_name: Optional[str] = Field(default="", description="Use a name or sentence to briefly summarize this stage")
+    reference_chapter: Tuple[int, int] = Field(description="Start and end chapter numbers of this part of plot, span usually around 10~20 chapters")
+    analysis: Optional[str] = Field(default="", description="From perspective of experienced web novel writer substituting author's first person view, how 'I' think about setting this part of plot, what role does this part play for volume main/branch line? What is the satisfaction point of this stage? Any hook/suspense at end?")
+    overview: Optional[str] = Field(default="", description="Concrete overview of this stage plot content, appropriate detail, involved main entities like character, scene/map, organization etc. should be reflected. Also, if protagonist has significant improvement (e.g. improved strength or status, increased wealth or resources), relevant info needs accurate data description, cannot be omitted")
+    chapter_outline_list:Optional[List[ChapterOutline]]=Field(description="Generate required chapter outlines based on reference_chapter, overview")
+    entity_snapshot: Optional[List[str]] = Field(default=[], description="At end of stage, key entity (mainly character) snapshot status info, including level/cultivation realm, wealth, techniques etc. accurate info, to conclude plot, ensuring plot development leads entity status to converge to entity status at end of this volume.")
 
 
 # === Step 6: Batch Chapter Outline Schemas===
 
 class Chapter(BaseModel):
-    volume_number: Optional[int] = Field(default=0, description="卷号，如果没有找到，则设置为0")
-    stage_number:Optional[int]=Field(default=1,description="该章节属于第几个阶段，从1开始")
-    title: Optional[str] = Field(default="", description="章节标题")
-    chapter_number: Optional[int] = Field(default=1, description="章节序号")
+    volume_number: Optional[int] = Field(default=0, description="Volume number, if not found, set to 0")
+    stage_number:Optional[int]=Field(default=1,description="Which stage this chapter belongs to, starting from 1")
+    title: Optional[str] = Field(default="", description="Chapter Title")
+    chapter_number: Optional[int] = Field(default=1, description="Chapter Number")
 
     entity_list: List[str] = Field(
         default=[],
-        description="章节中参与的重要实体列表，只能从提供的实体中选择；name 必须是纯名称（不得包含括号/备注）",
+        description="List of important entities participating in chapter, must be selected from provided entities; name must be pure name (no brackets/remarks)",
     )
-    content:Optional[str]=Field(default="",description="章节正文内容")
+    content:Optional[str]=Field(default="",description="Chapter text content")
     
 

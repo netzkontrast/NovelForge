@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any
 
-# 统一集中导出所有需要在 OpenAPI 中暴露的响应/嵌套模型
+# Unified centralized export of all response/nested models that need to be exposed in OpenAPI
 from app.schemas.wizard import (
 	WorldBuilding, Blueprint,
 	VolumeOutline, ChapterOutline,
@@ -22,16 +22,16 @@ RESPONSE_MODEL_MAP: Dict[str, Any] = {
 	'WorldBuilding': WorldBuilding,
 	'WorldviewTemplate': WorldviewTemplate,
 	'Blueprint': Blueprint,
-	# 使用未包装模型
+	# Use unwrapped model
 	'VolumeOutline': VolumeOutline,
  	'WritingGuide': WritingGuide,
 	'ChapterOutline': ChapterOutline,
 	'Chapter': Chapter,
-	# 基础schema，自动包含在OpenAPI中
+	# Base schema, automatically included in OpenAPI
 	'CharacterCard': CharacterCard,
 	'SceneCard': SceneCard,
 	'OrganizationCard': OrganizationCard,
-	# 显式导出嵌套类型，便于前端字段树解析
+	# Explicitly export nested types for frontend field tree parsing
 	'StageLine': StageLine,
 	'StoryLine': StoryLine,
 } 

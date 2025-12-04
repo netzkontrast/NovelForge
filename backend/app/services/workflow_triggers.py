@@ -14,16 +14,16 @@ def _match_triggers_for_card(session: Session, event: str, card: Card) -> List[W
     triggers = session.exec(q).all()
     matched: List[WorkflowTrigger] = []
     for t in triggers:
-        # 过滤 card_type
+        # Filter card_type
         if t.card_type_name and card.card_type and card.card_type.name != t.card_type_name:
             continue
-        # filter_json 预留：当前不实现复杂匹配
+        # filter_json reserved: Complex matching not implemented yet
         matched.append(t)
     return matched
 
 
 _recent_keys: Dict[str, float] = {}
-_DEBOUNCE_MS = 1500  # 同一 key 在该时间窗内不再触发
+_DEBOUNCE_MS = 1500  # Same key won't trigger again within this window
 
 
 def _make_idempotency_key(event: str, workflow_id: int, card: Card | None, project_id: int | None) -> str:
@@ -33,19 +33,19 @@ def _make_idempotency_key(event: str, workflow_id: int, card: Card | None, proje
 
 
 def _should_suppress(session: Session, key: str, workflow_id: int) -> bool:
-    # 1) 进程内防抖
+    # 1) In-process debounce
     now = monotonic()
     last = _recent_keys.get(key)
     if last is not None and (now - last) * 1000 < _DEBOUNCE_MS:
         return True
-    # 清理过期项，避免泄漏
+    # Clean up expired items to avoid leaks
     try:
         for k, v in list(_recent_keys.items()):
             if (now - v) * 1000 > 60000:
                 _recent_keys.pop(k, None)
     except Exception:
         pass
-    # 2) 持久层“同运行周期不二次触发”：查找相同幂等键且仍在进行的运行
+    # 2) Persistence layer "No secondary trigger in same run cycle": Check for running task with same idempotency key
     existing = session.exec(
         select(WorkflowRun).where(
             WorkflowRun.workflow_id == workflow_id,
@@ -55,13 +55,13 @@ def _should_suppress(session: Session, key: str, workflow_id: int) -> bool:
     ).first()
     if existing:
         return True
-    # 标记本次
+    # Mark current
     _recent_keys[key] = now
     return False
 
 
 def trigger_on_card_save(session: Session, card: Card) -> List[int]:
-    """保存/更新卡片后触发 OnSave 类型工作流，返回 run_id 列表。"""
+    """Trigger OnSave workflows after card save/update, return run_id list."""
     run_ids: List[int] = []
     triggers = _match_triggers_for_card(session, "onsave", card)
     for t in triggers:
@@ -85,7 +85,7 @@ def trigger_on_card_save(session: Session, card: Card) -> List[int]:
 
 
 def trigger_on_generate_finish(session: Session, card: Card | None, project_id: int | None) -> List[int]:
-    """生成/续写完成后触发 OnGenerateFinish 类型工作流，返回 run_id 列表。"""
+    """Trigger OnGenerateFinish workflows after generation/continuation, return run_id list."""
     run_ids: List[int] = []
     q = select(WorkflowTrigger).where(
         WorkflowTrigger.trigger_on == "ongenfinish",
@@ -113,8 +113,8 @@ def trigger_on_generate_finish(session: Session, card: Card | None, project_id: 
 
 
 def trigger_on_project_create(session: Session, project_id: int) -> List[int]:
-    """项目创建后触发 onprojectcreate 类型工作流，返回 run_id 列表。
-    作用域仅包含 project_id，不携带 card_id。
+    """Trigger onprojectcreate workflows after project creation, return run_id list.
+    Scope contains only project_id, no card_id.
     """
     run_ids: List[int] = []
     triggers = session.exec(

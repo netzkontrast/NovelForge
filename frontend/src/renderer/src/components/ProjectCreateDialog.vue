@@ -1,25 +1,25 @@
 
 <template>
   <el-dialog v-model="visible" :title="dialogTitle" width="500" >
-    <el-form :model="form" ref="formRef" :rules="rules" label-width="80px" @submit.prevent="handleConfirm">
-      <el-form-item label="项目名称" prop="name">
+    <el-form :model="form" ref="formRef" :rules="rules" label-width="120px" @submit.prevent="handleConfirm">
+      <el-form-item label="Project Name" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item label="项目描述" prop="description">
+      <el-form-item label="Description" prop="description">
         <el-input v-model="form.description" type="textarea" />
       </el-form-item>
-      <el-form-item v-if="!isEditMode" label="项目模板">
-        <el-select v-model="selectedWorkflowId" placeholder="选择初始化工作流(类型:onprojectcreate)" filterable clearable :loading="loadingWorkflows" style="width:100%">
+      <el-form-item v-if="!isEditMode" label="Project Template">
+        <el-select v-model="selectedWorkflowId" placeholder="Select Init Workflow (Type: onprojectcreate)" filterable clearable :loading="loadingWorkflows" style="width:100%">
           <el-option v-for="wf in initWorkflows" :key="wf.id" :label="wf.name" :value="wf.id" />
         </el-select>
       </el-form-item>
-      <!-- 隐藏的提交按钮，确保在输入框按回车会触发表单提交 -->
+      <!-- Hidden submit button to trigger form submit on enter -->
       <button type="submit" style="display:none"></button>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="visible = false">取消</el-button>
-        <el-button type="primary" @click="handleConfirm">确定</el-button>
+        <el-button @click="visible = false">Cancel</el-button>
+        <el-button type="primary" @click="handleConfirm">Confirm</el-button>
       </div>
     </template>
   </el-dialog>
@@ -45,16 +45,16 @@ const form = reactive<ProjectCreate | ProjectUpdate>({
 })
 const editingProject = ref<Project | null>(null)
 
-// 工作流模式
+// Workflow Mode
 const selectedWorkflowId = ref<number | null>(null)
 const initWorkflows = ref<WorkflowRead[]>([])
 const loadingWorkflows = ref(false)
 
 const isEditMode = computed(() => !!editingProject.value)
-const dialogTitle = computed(() => isEditMode.value ? '编辑项目' : '新建项目')
+const dialogTitle = computed(() => isEditMode.value ? 'Edit Project' : 'New Project')
 
 const rules = reactive<FormRules>({
-  name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }]
+  name: [{ required: true, message: 'Please enter project name', trigger: 'blur' }]
 })
 
 const emit = defineEmits(['create', 'update'])
@@ -63,7 +63,7 @@ const emit = defineEmits(['create', 'update'])
 async function loadInitWorkflows() {
   try {
     loadingWorkflows.value = true
-    // 取所有触发器中过滤 onprojectcreate，再映射到工作流
+    // Filter triggers for onprojectcreate, then map to workflows
     const triggers = await listWorkflowTriggers()
     const ids = Array.from(new Set(triggers.filter(t=>t.trigger_on==='onprojectcreate').map(t=>t.workflow_id)))
     if (ids.length) {
@@ -91,7 +91,7 @@ function open(project: Project | null = null) {
     } else {
       form.name = ''
       form.description = ''
-      // 重载工作流（保证最新）
+      // Reload workflows (ensure latest)
       loadInitWorkflows()
     }
   })
@@ -109,12 +109,12 @@ function handleConfirm() {
       }
       visible.value = false
     } else {
-      ElMessage.error('请填写必要的表单项')
+      ElMessage.error('Please fill in required fields')
     }
   })
 }
 
-// 暴露 open 方法给父组件
+// Expose open method to parent
 defineExpose({
   open
 })

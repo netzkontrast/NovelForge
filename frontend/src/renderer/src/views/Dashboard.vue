@@ -3,46 +3,46 @@
     <!-- 顶部横幅：视觉层级 + 关键信息与CTA -->
     <section class="dashboard-hero">
       <div class="hero-text">
-        <h1>我的书架</h1>
-        <p class="subtitle">汇聚你的世界与故事，从这里开启每一次灵感</p>
+        <h1>My Bookshelf</h1>
+        <p class="subtitle">Gather your worlds and stories, start every inspiration from here</p>
       </div>
       <el-button type="primary" :icon="Plus" @click="handleOpenCreateDialog" size="large" class="hero-cta">
-        开始创作
+        Start Creating
       </el-button>
     </section>
 
-    <!-- 工具条：搜索 + 排序 -->
+    <!-- Toolbar: Search + Sort -->
     <div class="toolbar">
-      <el-input v-model="searchQuery" placeholder="搜索项目（按名称/描述包含匹配）" clearable class="search-input" />
+      <el-input v-model="searchQuery" placeholder="Search Projects (Match by Name/Description)" clearable class="search-input" />
       <el-select v-model="sortKey" class="sort-select" size="default">
-        <el-option label="按创建时间（最新优先）" value="created-desc" />
-        <el-option label="按创建时间（最旧优先）" value="created-asc" />
-        <el-option label="按名称 A→Z" value="name-asc" />
-        <el-option label="按名称 Z→A" value="name-desc" />
+        <el-option label="By Creation Time (Newest First)" value="created-desc" />
+        <el-option label="By Creation Time (Oldest First)" value="created-asc" />
+        <el-option label="By Name A→Z" value="name-asc" />
+        <el-option label="By Name Z→A" value="name-desc" />
       </el-select>
     </div>
 
     <main class="dashboard-main" v-loading="isLoading">
-      <el-empty v-if="displayProjects.length === 0" description="没有匹配的项目，试试新建一个吧！">
-        <el-button type="primary" :icon="Plus" @click="handleOpenCreateDialog">新建项目</el-button>
+      <el-empty v-if="displayProjects.length === 0" description="No matching projects, try creating one!">
+        <el-button type="primary" :icon="Plus" @click="handleOpenCreateDialog">New Project</el-button>
       </el-empty>
       <el-row :gutter="20" v-else>
         <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6" v-for="project in displayProjects" :key="project.id">
           <el-card class="project-card showcase" shadow="hover" @click="handleProjectSelect(project)">
-            <!-- 封面：渐变 + 首字母标识，让卡片更有辨识度 -->
+            <!-- Cover: Gradient + Initial Identifier, making card more recognizable -->
             <div class="card-cover" :class="getCoverClass(project.name)">
               <span class="cover-initial">{{ getInitial(project.name) }}</span>
             </div>
             <div class="card-content">
               <div class="title-row">
                 <h3 class="title" :title="project.name">{{ project.name }}</h3>
-                <!-- 悬浮显隐的操作按钮：避免信息噪点 -->
+                <!-- Hover visible actions: Avoid info noise -->
                 <div class="card-actions" @click.stop>
-                  <el-tooltip content="编辑"><el-button :icon="Edit" circle plain size="small" @click="handleProjectEdit(project)" /></el-tooltip>
-                  <el-tooltip content="删除"><el-button :icon="Delete" circle plain type="danger" size="small" @click="handleProjectDelete(project)" /></el-tooltip>
+                  <el-tooltip content="Edit"><el-button :icon="Edit" circle plain size="small" @click="handleProjectEdit(project)" /></el-tooltip>
+                  <el-tooltip content="Delete"><el-button :icon="Delete" circle plain type="danger" size="small" @click="handleProjectDelete(project)" /></el-tooltip>
                 </div>
               </div>
-              <p class="desc" :title="project.description || '暂无简介'">{{ project.description || '暂无简介' }}</p>
+              <p class="desc" :title="project.description || 'No Description'">{{ project.description || 'No Description' }}</p>
             </div>
           </el-card>
         </el-col>
@@ -70,16 +70,16 @@ const { projects, isLoading } = storeToRefs(projectListStore)
 const createDialogRef = ref<InstanceType<typeof ProjectCreateDialog>>()
 const emit = defineEmits(['project-selected'])
 
-// 搜索与排序（仅前端，不改接口）
+// Search and Sort (Frontend only, interface not changed)
 const searchQuery = ref('')
-// 说明：后端 Project 未提供 created_at 字段，这里用 id 自增作为“创建时间”的近似排序
+// Note: Backend Project does not provide created_at field, using id increment as approximate "Creation Time" sort
 type SortKey = 'created-desc' | 'created-asc' | 'name-asc' | 'name-desc'
 const sortKey = ref<SortKey>('created-desc')
 
 const displayProjects = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   let data = projects.value.slice()
-  // 隐藏系统保留项目
+  // Hide system reserved project
   data = data.filter(p => (p.name || '') !== '__free__')
   if (q) {
     data = data.filter(p => (p.name || '').toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q))
@@ -120,11 +120,11 @@ async function handleProjectDelete(project: Project) {
   try {
     if ((project.name || '') === '__free__') return
     await ElMessageBox.confirm(
-      `确定要删除项目 "${project.name}" 吗？此操作将永久删除该项目及其所有内容，且无法恢复。`,
-      '警告',
+      `Are you sure you want to delete project "${project.name}"? This action will permanently delete this project and all its contents, and cannot be recovered.`,
+      'Warning',
       {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
+        confirmButtonText: 'Confirm Delete',
+        cancelButtonText: 'Cancel',
         type: 'warning',
       }
     )
@@ -144,14 +144,14 @@ onMounted(() => {
   projectListStore.fetchProjects()
 })
 
-// 计算首字母（中文则取首字符），用于封面徽标
+// Calculate initial (Take first char for Chinese), used for cover logo
 function getInitial(name: string) {
   if (!name) return 'N'
   const ch = name.trim().charAt(0)
   return ch.toUpperCase()
 }
 
-// 按名称哈希映射到固定的渐变色组，保证同名项目视觉一致
+// Hash map name to fixed gradient set, ensuring consistent visual for same name projects
 function getCoverClass(name: string) {
   const palettes = ['g1','g2','g3','g4','g5','g6']
   let hash = 0
@@ -163,19 +163,19 @@ function getCoverClass(name: string) {
 <style scoped>
 .dashboard-container {
   padding: 20px;
-  /* 让容器占满父级主区，而不是视口高度，避免与顶部 Header 高度叠加产生滚动条 */
+  /* Let container fill parent main area, not viewport height, avoid scrollbar with top Header height */
   min-height: 100%;
   box-sizing: border-box;
   overflow-y: auto;
 }
 
-/* 顶部横幅：轻渐变背景 + 适度留白，让界面更有仪式感 */
+/* Top Hero: Visual Hierarchy + Key Info and CTA */
 .dashboard-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  /* 渐变更柔和，保证标题文字可读性 */
+  /* Gradient softer, ensure title readability */
   background: linear-gradient(135deg, var(--el-color-primary-light-8), var(--el-fill-color-light) 65%);
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 10px;
@@ -185,25 +185,25 @@ function getCoverClass(name: string) {
 .subtitle { margin: 4px 0 0; color: var(--el-text-color-secondary); font-size: 13px; text-shadow: 0 1px 0 rgba(255,255,255,.35); }
 .hero-cta { white-space: nowrap; }
 
-/* 工具条：响应式换行 */
+/* Toolbar: Search + Sort */
 .toolbar {
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
 }
 .search-input { width: 320px; max-width: 60vw; }
-/* 排序选择器加宽，避免中文标签被截断 */
+/* Sort select widened, avoid label truncation */
 .sort-select { width: 240px; max-width: 50vw; }
 
-/* 主体区高度无需强行撑满视口，由父级滚动控制 */
+/* Main area height not forced to fill viewport, controlled by parent scroll */
 .dashboard-main { min-height: auto; }
 
-/* 卡片：封面 + 内容区 + 悬浮操作 */
+/* Card: Cover + Content Area + Hover Actions */
 .project-card { margin-bottom: 20px; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; overflow: hidden; }
 .project-card:hover { transform: translateY(-3px); }
 
 .card-cover { height: 120px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 28px; letter-spacing: 1px; }
 .cover-initial { text-shadow: 0 1px 2px rgba(0,0,0,.25); }
 
-/* 六组固定渐变，视觉清爽且区分度高 */
+/* Six groups of fixed gradients, visual clean and high distinction */
 .cover-g1 { background: linear-gradient(135deg, #8E9EAB, #EEF2F3); color: #2c3e50; }
 .cover-g2 { background: linear-gradient(135deg, #74ebd5, #ACB6E5); }
 .cover-g3 { background: linear-gradient(135deg, #f6d365, #fda085); }
@@ -216,7 +216,7 @@ function getCoverClass(name: string) {
 .title { margin: 0; font-size: 16px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .desc { margin: 6px 0 0; color: var(--el-text-color-regular); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 42px; }
 
-/* 悬浮操作：默认透明，悬浮时显现 */
+/* Hover actions: Default transparent, visible on hover */
 .card-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .18s ease; }
 .project-card:hover .card-actions { opacity: 1; }
 

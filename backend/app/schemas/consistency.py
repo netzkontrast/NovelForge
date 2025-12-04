@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 
 class CheckRequest(BaseModel):
-	text: str = Field(..., description="待校验文本")
-	facts_structured: Optional[Dict[str, Any]] = Field(default=None, description="结构化事实子图（relation_summaries等）")
+	text: str = Field(..., description="Text to verify")
+	facts_structured: Optional[Dict[str, Any]] = Field(default=None, description="Structured fact subgraph (relation_summaries etc.)")
 
 
 class Issue(BaseModel):

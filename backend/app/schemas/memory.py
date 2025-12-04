@@ -18,7 +18,7 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
 	nodes: List[Dict[str, Any]]
 	edges: List[Dict[str, Any]]
-	# 仅保留实际使用字段
+	# Only keep fields actually used
 	fact_summaries: List[str]
 	relation_summaries: List[Dict[str, Any]]
 

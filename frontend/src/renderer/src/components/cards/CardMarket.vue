@@ -1,131 +1,101 @@
 <template>
   <div class="card-market">
-    <CardFilterBar :card-types="cardTypes" @change="handleFilterChange" />
-    <el-scrollbar>
-      <div v-if="viewMode === '卡片'">
-        <div v-if="filteredCards.length > 0" class="card-grid" :class="{ compact: density==='紧凑' }">
-          <el-card v-for="card in filteredCards" :key="card.id" class="card-item" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <div class="header-left">
-                  <el-tag size="small" effect="plain">{{ card.card_type.name }}</el-tag>
-                  <span class="title">{{ card.title }}</span>
-                </div>
-                <div class="header-right">
-                  <el-tooltip content="编辑">
-                    <el-button text size="small" @click="onEditCard(card.id)">编辑</el-button>
-                  </el-tooltip>
-                  <el-popconfirm
-                    title="确定要删除这张卡片吗？"
-                    confirm-button-text="确定"
-                    cancel-button-text="取消"
-                    @confirm="onDeleteCard(card.id)"
-                  >
-                    <template #reference>
-                      <el-button text type="danger" size="small">删除</el-button>
-                    </template>
-                  </el-popconfirm>
-                </div>
-              </div>
-            </template>
-            <div class="card-content">
-              <p class="meta">创建于: {{ formatDate(card.created_at) }}</p>
-            </div>
-          </el-card>
+    <div class="market-header">
+      <CardFilterBar @filter="handleFilter" />
+      <div class="market-stats">Total {{ filteredCards.length }} Cards</div>
+    </div>
+    <div class="market-grid" v-if="filteredCards.length">
+      <div v-for="card in filteredCards" :key="card.id" class="market-card" @click="$emit('edit-card', card.id)">
+        <div class="card-cover" :class="getCoverClass(card.title)">
+          <div class="card-type-tag">{{ card.card_type?.name }}</div>
+          <div class="card-initial">{{ getInitial(card.title) }}</div>
         </div>
-        <el-empty v-else description="未找到匹配的卡片" />
+        <div class="card-info">
+          <div class="card-title" :title="card.title">{{ card.title }}</div>
+          <div class="card-meta">
+            <span class="meta-item"><el-icon><Clock /></el-icon>{{ formatTime(card.created_at) }}</span>
+          </div>
+        </div>
       </div>
-
-      <div v-else>
-        <el-table :data="filteredCards" size="small" border stripe>
-          <el-table-column prop="title" label="标题" />
-          <el-table-column label="类型" width="140">
-            <template #default="{ row }">
-              <el-tag size="small">{{ row.card_type.name }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="创建时间" width="200">
-            <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="160">
-            <template #default="{ row }">
-              <el-button size="small" type="primary" plain @click="onEditCard(row.id)">编辑</el-button>
-              <el-popconfirm title="确定删除?" @confirm="onDeleteCard(row.id)">
-                <template #reference>
-                  <el-button size="small" type="danger" plain>删除</el-button>
-                </template>
-              </el-popconfirm>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </el-scrollbar>
+    </div>
+    <el-empty v-else description="No matching cards found" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useCardStore } from '@renderer/stores/useCardStore'
 import { storeToRefs } from 'pinia'
+import { Clock } from '@element-plus/icons-vue'
 import CardFilterBar from './CardFilterBar.vue'
-
-const emit = defineEmits<{ (e: 'edit-card', id: number): void }>()
+import dayjs from 'dayjs'
 
 const cardStore = useCardStore()
-const { cards, cardTypes } = storeToRefs(cardStore)
+const { cards } = storeToRefs(cardStore)
 
-const keyword = ref('')
-const selectedTypes = ref<number[]>([])
-const sortKey = ref<'recent'|'title'|'type'>('recent')
-const density = ref<'舒适'|'紧凑'>('舒适')
-const viewMode = ref<'卡片'|'列表'>('卡片')
+const filterState = ref({ search: '', typeId: undefined as number | undefined, sort: 'created_desc' })
+
+function handleFilter(state: any) {
+  filterState.value = state
+}
 
 const filteredCards = computed(() => {
-  let list = [...cards.value]
-  if (keyword.value.trim()) {
-    const keywords = keyword.value.trim().toLowerCase().split(/\s+/)
-    list = list.filter(c => {
-      const t = (c.title || '').toLowerCase()
-      return keywords.every(k => t.includes(k))
-    })
+  let list = cards.value.slice()
+  const { search, typeId, sort } = filterState.value
+
+  if (search) {
+    const q = search.toLowerCase()
+    list = list.filter(c =>
+      c.title.toLowerCase().includes(q) ||
+      JSON.stringify(c.content).toLowerCase().includes(q)
+    )
   }
-  if (selectedTypes.value.length) {
-    const set = new Set(selectedTypes.value)
-    list = list.filter(c => set.has(c.card_type_id))
+
+  if (typeId) {
+    list = list.filter(c => c.card_type?.id === typeId)
   }
-  switch (sortKey.value) {
-    case 'title':
-      list.sort((a, b) => a.title.localeCompare(b.title)); break
-    case 'type':
-      list.sort((a, b) => a.card_type.name.localeCompare(b.card_type.name)); break
-    default:
-      list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }
+
+  if (sort === 'created_desc') list.sort((a, b) => dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf())
+  if (sort === 'created_asc') list.sort((a, b) => dayjs(a.created_at).valueOf() - dayjs(b.created_at).valueOf())
+  if (sort === 'title_asc') list.sort((a, b) => a.title.localeCompare(b.title))
+
   return list
 })
 
-function handleFilterChange(payload: { keyword: string; types: number[]; sortKey: 'recent'|'title'|'type'; density: '舒适'|'紧凑'; view: '卡片'|'列表' }) {
-  keyword.value = payload.keyword
-  selectedTypes.value = payload.types
-  sortKey.value = payload.sortKey
-  density.value = payload.density
-  viewMode.value = payload.view
+function formatTime(t: string) {
+  return dayjs(t).format('YYYY-MM-DD')
 }
 
-function onEditCard(id: number) { emit('edit-card', id) }
-async function onDeleteCard(id: number) { await cardStore.removeCard(id) }
-function formatDate(dt: string) { return new Date(dt).toLocaleString() }
+function getInitial(name: string) {
+  return name ? name.charAt(0).toUpperCase() : '?'
+}
+
+function getCoverClass(name: string) {
+  const palettes = ['g1','g2','g3','g4','g5','g6']
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0
+  return 'cover-' + palettes[hash % palettes.length]
+}
 </script>
 
 <style scoped>
-.card-market { height: 100%; padding: 16px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.card-grid.compact { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.card-item { display: flex; flex-direction: column; }
-.card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0; }
-.header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-.title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-content { flex-grow: 1; color: var(--el-text-color-secondary); font-size: 13px; }
-.meta { margin: 0; }
-:deep(.header-right) { white-space: nowrap; }
-</style> 
+.card-market { padding: 12px; height: 100%; display: flex; flex-direction: column; }
+.market-header { margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.market-stats { font-size: 13px; color: var(--el-text-color-secondary); white-space: nowrap; }
+.market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; overflow-y: auto; padding-bottom: 20px; }
+.market-card { background: var(--el-bg-color); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; height: 240px; border: 1px solid var(--el-border-color-lighter); }
+.market-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px 0 rgba(0,0,0,0.1); border-color: var(--el-color-primary-light-5); }
+.card-cover { height: 140px; display: flex; align-items: center; justify-content: center; position: relative; color: #fff; font-weight: bold; font-size: 48px; }
+.card-type-tag { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; font-size: 12px; backdrop-filter: blur(4px); }
+.card-initial { text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.cover-g1 { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+.cover-g2 { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
+.cover-g3 { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+.cover-g4 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.cover-g5 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.cover-g6 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.card-info { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--el-text-color-primary); margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
+.card-meta { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--el-text-color-secondary); }
+.meta-item { display: flex; align-items: center; gap: 4px; }
+</style>

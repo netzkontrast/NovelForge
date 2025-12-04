@@ -1,0 +1,140 @@
+ ```
+ This knowledge base is mainly used for rendering work tag data. You can add or subtract items yourself (note to keep the format). You can add comments after the options. The comments will not be rendered on the frontend interface, but will be sent to the large model to help it understand.
+ ```
+
+ - Theme Tags
+    - Fantasy/Oriental Fantasy
+        - Eastern Fantasy
+        - Otherworld Continent
+        - High Martial Arts World
+        - Dynasty Hegemony
+        - Western Fantasy
+    - Sci-Fi
+        - Interstellar Civilization
+        - Mecha Ancient Martial Arts
+        - Doomsday Crisis
+        - Space-Time Travel
+    - Wuxia/Xianxia
+        - Classical Xianxia
+        - Cultivation Civilization
+        - Prehistoric Investiture
+        - Fantasy Cultivation
+        - Traditional Wuxia
+        - Fantasy Wuxia
+    - Urban
+        - Urban High Martial Arts
+        - Business War
+        - Entertainment Star
+        - Rural Life
+        - Feng Shui Master
+    - History
+        - Alternative History
+        - Historical Travel
+        - Industrial Revolution
+    - Game
+        - Holographic Online Game
+        - Game Otherworld
+        - Data Avatar
+    - Suspense
+        - Detective Reasoning
+        - Weird Tales
+        - Tomb Raiding Adventure
+        - Rules Weird Tales
+
+ - Target Audience
+    - General
+    - Male
+    - Female
+
+ - Writing Perspective
+    - First Person
+    - Third Person
+
+- Category Tags
+    - Time Travel (Comment: e.g. physical travel/soul travel/book travel/wear book etc.)
+    - Rebirth
+    - Reverse Travel (Comment: Ancient or otherworld people travel back to modern times)
+    - System Flow
+    - Live Streaming (Comment: Including cross-border live streaming/national destiny live streaming)
+    - Power Struggle
+    - Farming Flow (Comment: Gradually develop forces, become stronger; including getting rich, making money)
+    - Dihua (Comment: NPCs crazy brain supplement)
+    - Reiki Recovery
+    - Otherworld Science Flow (Comment: Use scientific thinking to become stronger in otherworld, dimensionality reduction strike; including technology flow, black technology)
+    - Waste Material Flow (Comment: Start as waste material counterattack)
+    - Xueba Flow (Comment: Academic genius)
+    - Invincible Flow (Comment: Start with full level or invincible cheat; including invincible text)
+    - Pretending to be a Pig to Eat a Tiger (Comment: Protagonist hides strength)
+    - Steady Flow (Comment: Gou Dao development, protagonist cautious and low-key)
+    - Cheat Wholesale (Comment: Protagonist gives cheats to others)
+    - Behind the Scenes Flow (Comment: Multi-vest big shot, hidden behind the scenes; including big shot)
+    - Time Retrospect/Predict Future
+    - Fourth Disaster (Comment: Players descend to otherworld; including online games)
+    - Weird Cultivation (Comment: Distorted cultivation system)
+    - Simulator (Comment: Life simulation choice)
+    - Wen Chao Gong (Comment: Copying literary and artistic works)
+    - Heavens Shuttle (Comment: Multi-world travel; including infinite flow, heavens and worlds)
+    - Civilization Deduction (Comment: Create new civilization)
+    - Villain Whitewashing (Comment: Villain changes fate)
+    - Group Chat Interaction (Comment: Cross-space-time chat group)
+    - Sign-in Flow
+    - Add Point Flow (Comment: Freely allocate attribute points)
+    - Villain Flow (Comment: Protagonist is a villain or forced villain task; including villain protagonist)
+    - Control Flow (Comment: Protagonist controls others or is controlled)
+    - Godhood Flow (Comment: Protagonist possesses divine power or creation; including god slaying)
+    - Infinite Flow (Comment: Travel through multiple worlds or dungeons)
+    - Two-way Travel (Comment: Protagonist and otherworld characters travel to each other)
+    - Eavesdropping Flow (Comment: Protagonist's heart voice or diary is heard/seen by others)
+    - Disciple Acceptance Flow (Comment: Protagonist accepts disciples widely, disciples grow and feed back)
+    - Civilization Collision (Comment: Confrontation between different civilization systems, such as technology and magic)
+    - Only Extraordinary (Comment: Only the protagonist in the world possesses extraordinary abilities or special talents)
+    - Otherworld Cultivation System Dimensionality Reduction Strike (Comment: This world system crushes in otherworld)
+    - Doomsday Survival
+    - Weird Dungeon (Comment: Weird world survival; including dungeons, thriller games)
+    - Reincarnation Flow (Comment: Protagonist reincarnation restarts life or dungeon)
+    - Mystery Flow (Comment: Worldview mysterious and unknown, including indescribable power; including Cthulhu)
+    - Rules Weird Tales (Comment: Unique rules need to be cracked to survive; including suspense)
+    - Reality Interspersed (Comment: Protagonist frequently switches between reality and otherworld/dungeon)
+    - Reversal Flow (Comment: Plot reverses multiple times, truth revealed)
+    - Out of Control Flow (Comment: Protagonist or world power out of control brings variables)
+    - Evolution Flow (Comment: Protagonist or world constantly evolves and upgrades)
+    - Lost Civilization (Comment: Explore and revive ancient civilization)
+    - Entertainment Circle (Comment: Star industry background; including stars)
+    - Campus (Comment: School background story; including school belle, students, academy flow)
+    - Supernatural (Comment: Supernatural horror; including ghost catching)
+    - Summoning Flow (Comment: Summon creatures or pets to fight)
+    - Dad (Comment: Parenting family theme)
+    - Shenhao (Comment: Super rich protagonist)
+    - Countryside (Comment: Rural background life)
+    - Alien Beast Flow (Comment: Monster or animal protagonist)
+    - Teacher (Comment: Education career theme)
+    - Agent (Comment: Spy action theme)
+    - Divine Doctor (Comment: Medical ability plot)
+    - Relaxed (Comment: Humorous style; including funny relaxed, hilarious)
+    - Team Withdrawal Flow (Comment: Protagonist actively or passively withdraws from original team, develops alone or forms new team)
+    - Mountain Search Flow (Comment: Protagonist or team conducts large-scale search and exploration in mountains and forests, common in immortal cultivation, treasure hunting etc.)
+    - Synthesis Flow (Comment: Protagonist obtains stronger power or new ability by synthesizing and fusing different items, skills or abilities)
+    - Return Flow (Comment: Resources, abilities, damage etc. obtained by protagonist return to themselves or others in some way, forming a circulation mechanism)
+    - Engagement Withdrawal Flow (Comment: Protagonist is withdrawn from engagement or actively withdraws, usually as an opportunity to counterattack or start a new life)
+    - Skill Picking (Comment: Protagonist obtains skills of others or environment through special ways, skill sources diverse and growable)
+    - Salvage Flow (Comment: Protagonist takes salvaging shipwrecks, ruins, wastes etc. as main line, obtaining resources, treasures or clues)
+    - Treasure Appraisal Flow (Comment: Protagonist is good at appraising treasures, antiques, obtaining wealth, status or promoting plot through treasure appraisal)
+    - Fishing Flow (Comment: Protagonist takes fishing as main line, fishing can obtain special items, opportunities or promote story development)
+    - Eco-box Flow (Comment: Protagonist owns or manages an independent ecological space, can cultivate plants and animals, develop civilization or cultivate in it)
+    - Krypton Gold Recharge Flow (Comment: Protagonist obtains ability, resources or growth by recharging, spending money etc., common in system text)
+    - Animal Flow (Comment: Protagonist is an animal or story unfolds from animal main perspective, or animal ability as core)
+    - Escape (Comment: Protagonist is hunted or persecuted for some reason, constantly escapes and grows in the process)
+    - Item Hint Flow (Comment: Protagonist can see special hints, attributes or instructions of items, gaining advantage thereby)
+    - See Health Bar Flow (Comment: Protagonist can see health bar, status etc. gamified information of others or monsters, assisting combat or survival)
+    - Pseudo-human Flow (Comment: Protagonist disguises as others, non-humans or hides true identity, conducting lurking, infiltration etc. activities)
+    - Picking Up Leaks (Comment: Protagonist obtains undervalued treasures, resources or opportunities at low price or by chance)
+    - Secret Room Escape (Comment: Protagonist trapped in confined space, escaping through puzzle solving, cooperation or struggle)
+
+- Emotional Relationship
+    - No CP
+    - Single Female Lead
+    - Single Male Lead
+    - Multiple Female Leads
+    - Multiple Male Leads
+    - Pure Love
+    - Childhood Sweethearts

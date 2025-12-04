@@ -33,18 +33,18 @@ class AssembledContext:
     def to_system_prompt_block(self) -> str:
         parts: List[str] = []
         if self.facts_subgraph:
-            parts.append(f"[事实子图]\n{self.facts_subgraph}")
+            parts.append(f"[Fact Subgraph]\n{self.facts_subgraph}")
         return "\n\n".join(parts)
 
 
 def _truncate(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text
-    return text[: max(0, limit - 200)] + "\n...[已截断]"
+    return text[: max(0, limit - 200)] + "\n...[Truncated]"
 
 
 def _compose_facts_subgraph_stub() -> str:
-    return "关键事实：暂无（尚未收集）。"
+    return "Key Facts: None (Not yet collected)."
 
 
 
@@ -58,7 +58,7 @@ def assemble_context(session: Session, params: ContextAssembleParams) -> Assembl
     facts_structured: Optional[Dict[str, Any]] = None
     try:
         provider = get_provider()
-        # 放宽：边类型允许任意（排除 HAS_ALIAS），以兼容旧图/新图
+        # Relax: edge type allows any (excluding HAS_ALIAS), compatible with old/new graphs
         edge_whitelist = None
         est_top_k = max(5, min(100, facts_quota // 100))
         sub_struct = provider.query_subgraph(
@@ -75,9 +75,9 @@ def assemble_context(session: Session, params: ContextAssembleParams) -> Assembl
             if (str(it.get("a")) in participant_set and str(it.get("b")) in participant_set)
         ]
         if filtered_relation_items:
-            lines: List[str] = ["关键事实："]
+            lines: List[str] = ["Key Facts:"]
             for it in filtered_relation_items:
-                a = str(it.get("a")); b = str(it.get("b")); kind_cn = str(it.get("kind") or "其他")
+                a = str(it.get("a")); b = str(it.get("b")); kind_cn = str(it.get("kind") or "Other")
                 pred_en = CN_TO_EN_KIND.get(kind_cn, kind_cn)
                 lines.append(f"- {a} {pred_en} {b}")
             facts_text = "\n".join(lines)
@@ -85,7 +85,7 @@ def assemble_context(session: Session, params: ContextAssembleParams) -> Assembl
             raw = sub_struct
             txt = "\n".join([f"- {f}" for f in (raw.get("fact_summaries") or [])])
             if txt:
-                facts_text = "关键事实：\n" + txt
+                facts_text = "Key Facts:\n" + txt
         try:
             from app.schemas.context import FactsStructured as _FactsStructured
             fs_model = _FactsStructured(

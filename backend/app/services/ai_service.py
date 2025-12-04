@@ -7,25 +7,25 @@ import json
 from loguru import logger
 
 class ContinuationResponse(BaseModel):
-    """AI续写的响应模型"""
-    continuation: str = Field(description="AI生成的续写内容")
+    """AI Continuation Response Model"""
+    continuation: str = Field(description="AI generated continuation content")
 
 class ContinuationRequest(BaseModel):
-    """请求AI续写的模型"""
+    """Request model for AI continuation"""
     llm_config_id: int
     prompt_id: int
-    context: Dict[str, Any]  # 用于填充提示词模板的上下文
+    context: Dict[str, Any]  # Used to fill prompt template
     max_tokens: Optional[int] = 5000
     temperature: Optional[float] = 0.7
     stream: bool = False
 
 def extract_text_content(tiptap_content: Dict[Any, Any]) -> str:
-    """从Tiptap编辑器的JSON内容中提取纯文本"""
+    """Extract plain text from Tiptap editor JSON content"""
     if not tiptap_content:
         return ""
     
     try:
-        # 尝试从content字段中获取文本
+        # Attempt to get text from content field
         if "content" in tiptap_content:
             text_parts = []
             for item in tiptap_content["content"]:
@@ -35,48 +35,48 @@ def extract_text_content(tiptap_content: Dict[Any, Any]) -> str:
                             text_parts.append(content_item.get("text", ""))
             return " ".join(text_parts)
         else:
-            # 如果找不到结构化内容，尝试将整个内容转换为字符串
+            # If structured content not found, try converting whole content to string
             return json.dumps(tiptap_content, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"提取文本内容时出错: {e}")
+        logger.error(f"Error extracting text content: {e}")
         return json.dumps(tiptap_content, ensure_ascii=False)
 
 async def generate_continuation(session: Session, request: ContinuationRequest) -> ContinuationResponse:
-    """生成AI续写内容"""
-    # 1. 获取提示词模板
+    """Generate AI continuation content"""
+    # 1. Get prompt template
     db_prompt = prompt_service.get_prompt(session, request.prompt_id)
     if not db_prompt:
-        raise ValueError(f"提示词未找到，ID: {request.prompt_id}")
+        raise ValueError(f"Prompt not found, ID: {request.prompt_id}")
 
-    # 2. 渲染提示词
+    # 2. Render prompt
     final_prompt = prompt_service.render_prompt(db_prompt.template, request.context)
     
-    # 3. 调用封装好的LLM Agent服务
+    # 3. Call encapsulated LLM Agent service
     try:
         result = await agent_service.run_llm_agent(
             session=session,
             llm_config_id=request.llm_config_id,
             user_prompt=final_prompt,
             output_type=ContinuationResponse,
-            system_prompt="你是一位专业的小说创作助手，擅长根据已有内容续写故事。",
+            system_prompt="You are a professional novel writing assistant, skilled at continuing stories based on existing content.",
             max_tokens=request.max_tokens,
             temperature=request.temperature
         )
         return result
     except ValueError as e:
-        logger.error(f"生成续写内容时出错: {e}")
+        logger.error(f"Error generating continuation content: {e}")
         raise e
 
 async def generate_continuation_streaming(
     session: Session, request: ContinuationRequest
 ) -> AsyncGenerator[str, None]:
-    """以流式方式生成AI续写内容"""
-    # 1. 获取提示词模板
+    """Generate AI continuation content in streaming mode"""
+    # 1. Get prompt template
     db_prompt = prompt_service.get_prompt(session, request.prompt_id)
     if not db_prompt:
-        raise ValueError(f"提示词未找到，ID: {request.prompt_id}")
+        raise ValueError(f"Prompt not found, ID: {request.prompt_id}")
 
-    # 2. 渲染提示词
+    # 2. Render prompt
     final_prompt = prompt_service.render_prompt(db_prompt.template, request.context)
 
     try:
@@ -84,11 +84,11 @@ async def generate_continuation_streaming(
             session=session,
             llm_config_id=request.llm_config_id,
             prompt=final_prompt,
-            system_prompt="你是一位专业的小说创作助手，擅长根据已有内容续写故事。",
+            system_prompt="You are a professional novel writing assistant, skilled at continuing stories based on existing content.",
             max_tokens=request.max_tokens,
             temperature=request.temperature,
         ):
             yield text_chunk
     except ValueError as e:
-        logger.error(f"生成流式续写内容时出错: {e}")
+        logger.error(f"Error generating streaming continuation content: {e}")
         raise e 
