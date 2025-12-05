@@ -34,6 +34,9 @@ def get_all_prompt_files():
     prompt_files = {}
     for filename in os.listdir(prompt_dir):
         if filename.endswith(('.prompt', '.txt')):
+            # Ignore files with non-ascii characters (Chinese files)
+            if any(ord(c) > 127 for c in filename):
+                continue
             file_path = os.path.join(prompt_dir, filename)
             name = os.path.splitext(filename)[0]
             prompt_files[name] = _parse_prompt_file(file_path)
@@ -270,6 +273,9 @@ def init_knowledge(db: Session):
 
     for filename in os.listdir(knowledge_dir):
         if not filename.lower().endswith(('.txt', '.md')):
+            continue
+        # Ignore files with non-ascii characters (Chinese files)
+        if any(ord(c) > 127 for c in filename):
             continue
         file_path = os.path.join(knowledge_dir, filename)
         name = os.path.splitext(filename)[0]
