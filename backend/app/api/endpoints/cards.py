@@ -61,16 +61,19 @@ def _compose_schema_with_types(schema: dict, db: Session) -> dict:
 
 @router.post("/card-types", response_model=CardTypeRead)
 def create_card_type(card_type: CardTypeCreate, db: Session = Depends(get_session)):
+    """Create a new card type."""
     service = CardTypeService(db)
     return service.create(card_type)
 
 @router.get("/card-types", response_model=List[CardTypeRead])
 def get_all_card_types(db: Session = Depends(get_session)):
+    """List all card types."""
     service = CardTypeService(db)
     return service.get_all()
 
 @router.get("/card-types/{card_type_id}", response_model=CardTypeRead)
 def get_card_type(card_type_id: int, db: Session = Depends(get_session)):
+    """Get a card type by ID."""
     service = CardTypeService(db)
     db_card_type = service.get_by_id(card_type_id)
     if db_card_type is None:
@@ -79,6 +82,7 @@ def get_card_type(card_type_id: int, db: Session = Depends(get_session)):
 
 @router.put("/card-types/{card_type_id}", response_model=CardTypeRead)
 def update_card_type(card_type_id: int, card_type: CardTypeUpdate, db: Session = Depends(get_session)):
+    """Update a card type."""
     service = CardTypeService(db)
     db_card_type = service.update(card_type_id, card_type)
     if db_card_type is None:
@@ -87,6 +91,7 @@ def update_card_type(card_type_id: int, card_type: CardTypeUpdate, db: Session =
 
 @router.delete("/card-types/{card_type_id}", status_code=204)
 def delete_card_type(card_type_id: int, db: Session = Depends(get_session)):
+    """Delete a card type."""
     service = CardTypeService(db)
     db_card_type = service.get_by_id(card_type_id)
     if not db_card_type:
@@ -101,6 +106,7 @@ def delete_card_type(card_type_id: int, db: Session = Depends(get_session)):
 
 @router.get("/card-types/{card_type_id}/schema")
 def get_card_type_schema(card_type_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Get the JSON schema for a card type."""
     ct = db.get(CardType, card_type_id)
     if not ct:
         raise HTTPException(status_code=404, detail="CardType not found")
@@ -108,6 +114,7 @@ def get_card_type_schema(card_type_id: int, db: Session = Depends(get_session)) 
 
 @router.put("/card-types/{card_type_id}/schema")
 def update_card_type_schema(card_type_id: int, payload: Dict[str, Any], db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Update the JSON schema for a card type."""
     ct = db.get(CardType, card_type_id)
     if not ct:
         raise HTTPException(status_code=404, detail="CardType not found")
@@ -121,6 +128,7 @@ def update_card_type_schema(card_type_id: int, payload: Dict[str, Any], db: Sess
 
 @router.get("/card-types/{card_type_id}/ai-params")
 def get_card_type_ai_params(card_type_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Get AI parameters for a card type."""
     ct = db.get(CardType, card_type_id)
     if not ct:
         raise HTTPException(status_code=404, detail="CardType not found")
@@ -128,6 +136,7 @@ def get_card_type_ai_params(card_type_id: int, db: Session = Depends(get_session
 
 @router.put("/card-types/{card_type_id}/ai-params")
 def update_card_type_ai_params(card_type_id: int, payload: Dict[str, Any], db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Update AI parameters for a card type."""
     ct = db.get(CardType, card_type_id)
     if not ct:
         raise HTTPException(status_code=404, detail="CardType not found")
@@ -141,6 +150,7 @@ def update_card_type_ai_params(card_type_id: int, payload: Dict[str, Any], db: S
 
 @router.post("/projects/{project_id}/cards", response_model=CardRead)
 def create_card_for_project(project_id: int, card: CardCreate, db: Session = Depends(get_session), response: Response = None):
+    """Create a new card within a project."""
     service = CardService(db)
     created = service.create(card, project_id)
     try:
@@ -153,11 +163,13 @@ def create_card_for_project(project_id: int, card: CardCreate, db: Session = Dep
 
 @router.get("/projects/{project_id}/cards", response_model=List[CardRead])
 def get_all_cards_for_project(project_id: int, db: Session = Depends(get_session)):
+    """List all cards in a project."""
     service = CardService(db)
     return service.get_all_for_project(project_id)
 
 @router.get("/cards/{card_id}", response_model=CardRead)
 def get_card(card_id: int, db: Session = Depends(get_session)):
+    """Get a card by ID."""
     service = CardService(db)
     db_card = service.get_by_id(card_id)
     if db_card is None:
@@ -166,6 +178,7 @@ def get_card(card_id: int, db: Session = Depends(get_session)):
 
 @router.put("/cards/{card_id}", response_model=CardRead)
 def update_card(card_id: int, card: CardUpdate, db: Session = Depends(get_session), response: Response = None):
+    """Update a card."""
     service = CardService(db)
     db_card = service.update(card_id, card)
     if db_card is None:
@@ -226,6 +239,7 @@ def batch_reorder_cards(request: CardBatchReorderRequest, db: Session = Depends(
 
 @router.delete("/cards/{card_id}", status_code=204)
 def delete_card(card_id: int, db: Session = Depends(get_session)):
+    """Delete a card."""
     service = CardService(db)
     if not service.delete(card_id):
         raise HTTPException(status_code=404, detail="Card not found")
@@ -233,6 +247,7 @@ def delete_card(card_id: int, db: Session = Depends(get_session)):
 
 @router.post("/cards/{card_id}/copy", response_model=CardRead)
 def copy_card_endpoint(card_id: int, payload: CardCopyOrMoveRequest, db: Session = Depends(get_session)):
+    """Copy a card to another project or parent."""
     service = CardService(db)
     copied = service.copy_card(card_id, payload.target_project_id, payload.parent_id)
     if not copied:
@@ -241,6 +256,7 @@ def copy_card_endpoint(card_id: int, payload: CardCopyOrMoveRequest, db: Session
 
 @router.post("/cards/{card_id}/move", response_model=CardRead)
 def move_card_endpoint(card_id: int, payload: CardCopyOrMoveRequest, db: Session = Depends(get_session)):
+    """Move a card to another project or parent."""
     service = CardService(db)
     moved = service.move_card(card_id, payload.target_project_id, payload.parent_id)
     if not moved:
@@ -251,6 +267,7 @@ def move_card_endpoint(card_id: int, payload: CardCopyOrMoveRequest, db: Session
 
 @router.get("/cards/{card_id}/schema")
 def get_card_schema(card_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Get the effective schema for a card."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -261,6 +278,7 @@ def get_card_schema(card_id: int, db: Session = Depends(get_session)) -> Dict[st
 
 @router.put("/cards/{card_id}/schema")
 def update_card_schema(card_id: int, payload: Dict[str, Any], db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Update the custom schema for a card."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -275,6 +293,7 @@ def update_card_schema(card_id: int, payload: Dict[str, Any], db: Session = Depe
 
 @router.post("/cards/{card_id}/schema/apply-to-type")
 def apply_card_schema_to_type(card_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Apply the card's schema to its card type."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -313,6 +332,7 @@ def _merge_effective_params(db: Session, card: Card) -> Dict[str, Any]:
 
 @router.get("/cards/{card_id}/ai-params")
 def get_card_ai_params(card_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Get AI parameters for a card."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -321,6 +341,7 @@ def get_card_ai_params(card_id: int, db: Session = Depends(get_session)) -> Dict
 
 @router.put("/cards/{card_id}/ai-params")
 def update_card_ai_params(card_id: int, payload: Dict[str, Any], db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Update custom AI parameters for a card."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -333,6 +354,7 @@ def update_card_ai_params(card_id: int, payload: Dict[str, Any], db: Session = D
 
 @router.post("/cards/{card_id}/ai-params/apply-to-type")
 def apply_card_ai_params_to_type(card_id: int, db: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Apply the card's AI parameters to its card type."""
     c = db.get(Card, card_id)
     if not c:
         raise HTTPException(status_code=404, detail="Card not found")

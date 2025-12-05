@@ -22,6 +22,7 @@ class LocalAsyncEngine:
 
     # ---------------- background & events ----------------
     async def _publish(self, run_id: int, event: str) -> None:
+        """Publish an event to the run's event queue."""
         # Fallback: Create queue if not exists, avoid missing events if frontend subscribes late
         queue = self._event_queues.get(run_id)
         if queue is None:
@@ -31,11 +32,13 @@ class LocalAsyncEngine:
         await queue.put(event)
 
     async def _close_queue(self, run_id: int) -> None:
+        """Close the event queue for a run."""
         queue = self._event_queues.get(run_id)
         if queue is not None:
             await queue.put("__CLOSE__")
 
     def _ensure_queue(self, run_id: int) -> asyncio.Queue:
+        """Ensure an event queue exists for a run."""
         q = self._event_queues.get(run_id)
         if q is None:
             q = asyncio.Queue()
@@ -44,6 +47,7 @@ class LocalAsyncEngine:
         return q
 
     def subscribe_events(self, run_id: int) -> AsyncIterator[str]:
+        """Subscribe to events for a specific run."""
         queue = self._ensure_queue(run_id)
 
         async def _gen() -> AsyncIterator[str]:
@@ -55,6 +59,7 @@ class LocalAsyncEngine:
         return _gen()
 
     def _background_run(self, coro_factory: Callable[[], asyncio.Future], run_id: int) -> Optional[asyncio.Task]:
+        """Run a coroutine in the background."""
         try:
             loop = asyncio.get_running_loop()
             return loop.create_task(coro_factory())
@@ -70,6 +75,7 @@ class LocalAsyncEngine:
 
     # ---------------- create run ----------------
     def create_run(self, session: Session, workflow: Workflow, scope_json: Optional[dict], params_json: Optional[dict], idempotency_key: Optional[str]) -> WorkflowRun:
+        """Create a new workflow run."""
         run = WorkflowRun(
             workflow_id=workflow.id,
             definition_version=workflow.version,
@@ -119,6 +125,7 @@ class LocalAsyncEngine:
 
     # ---------------- execute ----------------
     async def _execute_dsl(self, session: Session, workflow: Workflow, run: WorkflowRun) -> None:
+        """Execute the workflow DSL."""
         dsl: Dict[str, Any] = workflow.definition_json or {}
         raw_nodes: List[dict] = list(dsl.get("nodes") or [])
         
@@ -319,6 +326,7 @@ class LocalAsyncEngine:
 
     # ---------------- run ----------------
     def run(self, session: Session, run: WorkflowRun) -> None:
+        """Run the workflow."""
         if run.id in self._run_tasks:
             return
 
@@ -392,6 +400,7 @@ class LocalAsyncEngine:
             self._run_tasks[run.id] = task
 
     def cancel(self, run_id: int) -> bool:
+        """Cancel a running workflow."""
         task = self._run_tasks.get(run_id)
         if task and not task.done():
             task.cancel()

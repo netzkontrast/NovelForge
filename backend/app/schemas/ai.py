@@ -2,6 +2,25 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 
 class ContinuationRequest(BaseModel):
+    """
+    Request model for AI continuation of text.
+
+    Attributes:
+        previous_content: The content written so far.
+        llm_config_id: The ID of the LLM configuration to use.
+        stream: Whether to stream the response.
+        project_id: The project ID (optional).
+        volume_number: The volume number (optional).
+        chapter_number: The chapter number (optional).
+        participants: List of participant names (optional).
+        temperature: Sampling temperature (optional).
+        max_tokens: Maximum tokens to generate (optional).
+        timeout: Timeout in seconds (optional).
+        context_info: Additional context information (optional).
+        existing_word_count: Word count of existing text (optional).
+        prompt_name: Specific prompt name to use (optional).
+        append_continuous_novel_directive: Whether to append directive for continuous novel text.
+    """
     previous_content: str = Field(default="", description="Written chapter content")
     llm_config_id: int
     stream: bool = False
@@ -24,11 +43,31 @@ class ContinuationRequest(BaseModel):
     append_continuous_novel_directive: bool = Field(default=True, description="Whether to append continuous novel text directive")
 
 class ContinuationResponse(BaseModel):
+    """
+    Response model for AI continuation.
+
+    Attributes:
+        content: The generated content.
+    """
     content: str
 
 
 class AssistantChatRequest(BaseModel):
-    """Inspiration Assistant Chat Request (New Format)"""
+    """
+    Request model for the Inspiration Assistant Chat.
+
+    Attributes:
+        context_info: Complete project context info.
+        user_prompt: User's current input.
+        project_id: Project ID.
+        llm_config_id: LLM Config ID.
+        prompt_name: System prompt name.
+        temperature: Sampling temperature (optional).
+        max_tokens: Max tokens (optional).
+        timeout: Timeout seconds (optional).
+        stream: Whether streaming output.
+        use_react_mode: Whether to use ReAct mode (Text format tool calling).
+    """
     # New format: Frontend sends unified context info and user input
     context_info: str = Field(description="Complete project context info (including project structure, operation history, cited cards, etc.)")
     user_prompt: str = Field(default="", description="User current input (can be empty)")
@@ -47,6 +86,20 @@ class AssistantChatRequest(BaseModel):
 
 
 class GeneralAIRequest(BaseModel):
+    """
+    Request model for general AI tasks.
+
+    Attributes:
+        input: Input data dictionary.
+        llm_config_id: LLM Config ID (optional).
+        prompt_name: Prompt name (optional).
+        response_model_name: Response model name or schema (optional).
+        response_model_schema: Dynamic response model schema (optional).
+        temperature: Sampling temperature (optional).
+        max_tokens: Max tokens generated (optional).
+        timeout: Generation timeout (optional).
+        deps: Dependency injection data as JSON string (optional).
+    """
     input: Dict[str, Any]
     llm_config_id: Optional[int] = None
     prompt_name: Optional[str] = None

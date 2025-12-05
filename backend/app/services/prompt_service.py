@@ -5,21 +5,61 @@ from app.schemas.prompt import PromptCreate, PromptUpdate
 from string import Template
 
 def get_prompt(session: Session, prompt_id: int) -> Optional[Prompt]:
-    """Get single prompt by ID"""
+    """
+    Get single prompt by ID.
+
+    Args:
+        session: Database session.
+        prompt_id: Prompt ID.
+
+    Returns:
+        Prompt object or None.
+    """
     return session.get(Prompt, prompt_id)
 
 def get_prompt_by_name(session: Session, prompt_name: str) -> Optional[Prompt]:
-    """Get single prompt by name"""
+    """
+    Get single prompt by name.
+
+    Args:
+        session: Database session.
+        prompt_name: Prompt name.
+
+    Returns:
+        Prompt object or None.
+    """
     statement = select(Prompt).where(Prompt.name == prompt_name)
     return session.exec(statement).first()
 
 def get_prompts(session: Session, skip: int = 0, limit: int = 100) -> List[Prompt]:
-    """Get prompt list"""
+    """
+    Get prompt list.
+
+    Args:
+        session: Database session.
+        skip: Offset.
+        limit: Limit.
+
+    Returns:
+        List of Prompt objects.
+    """
     statement = select(Prompt).offset(skip).limit(limit)
     return session.exec(statement).all()
 
 def create_prompt(session: Session, prompt_create: PromptCreate) -> Prompt:
-    """Create new prompt"""
+    """
+    Create new prompt.
+
+    Args:
+        session: Database session.
+        prompt_create: Prompt creation data.
+
+    Returns:
+        Created Prompt object.
+
+    Raises:
+        ValueError: If prompt name already exists.
+    """
     # Check if name already exists
     existing_prompt = get_prompt_by_name(session, prompt_create.name)
     if existing_prompt:
@@ -32,7 +72,17 @@ def create_prompt(session: Session, prompt_create: PromptCreate) -> Prompt:
     return db_prompt
 
 def update_prompt(session: Session, prompt_id: int, prompt_update: PromptUpdate) -> Optional[Prompt]:
-    """Update prompt"""
+    """
+    Update prompt.
+
+    Args:
+        session: Database session.
+        prompt_id: Prompt ID.
+        prompt_update: Update data.
+
+    Returns:
+        Updated Prompt object or None.
+    """
     db_prompt = session.get(Prompt, prompt_id)
     if not db_prompt:
         return None
@@ -45,7 +95,16 @@ def update_prompt(session: Session, prompt_id: int, prompt_update: PromptUpdate)
     return db_prompt
 
 def delete_prompt(session: Session, prompt_id: int) -> bool:
-    """Delete prompt"""
+    """
+    Delete prompt.
+
+    Args:
+        session: Database session.
+        prompt_id: Prompt ID.
+
+    Returns:
+        True if deleted, False if not found.
+    """
     db_prompt = session.get(Prompt, prompt_id)
     if not db_prompt:
         return False
@@ -57,9 +116,15 @@ def render_prompt(prompt_template: str, context: Dict[str, Any]) -> str:
     """
     Render prompt template using context.
     
-    :param prompt_template: String template with placeholders (e.g., "Hello, ${name}")
-    :param context: Dictionary containing values to fill in the template (e.g., {"name": "World"})
-    :return: Rendered string ("Hello, World")
+    Args:
+        prompt_template: String template with placeholders (e.g., "Hello, ${name}").
+        context: Dictionary containing values to fill in the template.
+
+    Returns:
+        Rendered string.
+
+    Raises:
+        ValueError: If rendering fails.
     """
     template = Template(prompt_template)
     try:

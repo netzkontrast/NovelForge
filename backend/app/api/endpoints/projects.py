@@ -11,21 +11,25 @@ router = APIRouter()
 
 @router.post("/", response_model=ApiResponse[ProjectRead])
 def create_project_endpoint(project_in: ProjectCreate, session: Session = Depends(get_session)):
+    """Create a new project."""
     project = project_service.create_project(session=session, project_in=project_in)
     return ApiResponse(data=project)
 
 @router.get("/", response_model=ApiResponse[List[ProjectRead]])
 def get_projects_endpoint(session: Session = Depends(get_session)):
+    """List all projects."""
     projects = project_service.get_projects(session=session)
     return ApiResponse(data=projects)
 
 @router.get("/free", response_model=ApiResponse[ProjectRead])
 def get_free_project_endpoint(session: Session = Depends(get_session)):
+    """Get or create the system reserved project."""
     proj = project_service.get_or_create_free_project(session=session)
     return ApiResponse(data=proj)
 
 @router.get("/{project_id}", response_model=ApiResponse[ProjectRead])
 def get_project_endpoint(project_id: int, session: Session = Depends(get_session)):
+    """Get a project by ID."""
     project = project_service.get_project(session=session, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -33,6 +37,7 @@ def get_project_endpoint(project_id: int, session: Session = Depends(get_session
 
 @router.put("/{project_id}", response_model=ApiResponse[ProjectRead])
 def update_project_endpoint(project_id: int, project_in: ProjectUpdate, session: Session = Depends(get_session)):
+    """Update a project."""
     project = project_service.update_project(session=session, project_id=project_id, project_in=project_in)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -40,7 +45,8 @@ def update_project_endpoint(project_id: int, project_in: ProjectUpdate, session:
 
 @router.delete("/{project_id}", response_model=ApiResponse)
 def delete_project_endpoint(project_id: int, session: Session = Depends(get_session)):
+    """Delete a project."""
     success = project_service.delete_project(session=session, project_id=project_id)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
-    return ApiResponse(message="Project deleted successfully") 
+    return ApiResponse(message="Project deleted successfully")

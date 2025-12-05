@@ -11,7 +11,17 @@ class ContinuationResponse(BaseModel):
     continuation: str = Field(description="AI generated continuation content")
 
 class ContinuationRequest(BaseModel):
-    """Request model for AI continuation"""
+    """
+    Request model for AI continuation.
+
+    Attributes:
+        llm_config_id: ID of the LLM configuration.
+        prompt_id: ID of the prompt template.
+        context: Context dictionary to fill the prompt template.
+        max_tokens: Maximum tokens to generate.
+        temperature: Sampling temperature.
+        stream: Whether to stream the response.
+    """
     llm_config_id: int
     prompt_id: int
     context: Dict[str, Any]  # Used to fill prompt template
@@ -20,7 +30,15 @@ class ContinuationRequest(BaseModel):
     stream: bool = False
 
 def extract_text_content(tiptap_content: Dict[Any, Any]) -> str:
-    """Extract plain text from Tiptap editor JSON content"""
+    """
+    Extract plain text from Tiptap editor JSON content.
+
+    Args:
+        tiptap_content: The JSON content from Tiptap editor.
+
+    Returns:
+        Extracted plain text string.
+    """
     if not tiptap_content:
         return ""
     
@@ -42,7 +60,19 @@ def extract_text_content(tiptap_content: Dict[Any, Any]) -> str:
         return json.dumps(tiptap_content, ensure_ascii=False)
 
 async def generate_continuation(session: Session, request: ContinuationRequest) -> ContinuationResponse:
-    """Generate AI continuation content"""
+    """
+    Generate AI continuation content.
+
+    Args:
+        session: Database session.
+        request: Continuation request object.
+
+    Returns:
+        ContinuationResponse object containing the generated content.
+
+    Raises:
+        ValueError: If prompt is not found or generation fails.
+    """
     # 1. Get prompt template
     db_prompt = prompt_service.get_prompt(session, request.prompt_id)
     if not db_prompt:
@@ -70,7 +100,19 @@ async def generate_continuation(session: Session, request: ContinuationRequest) 
 async def generate_continuation_streaming(
     session: Session, request: ContinuationRequest
 ) -> AsyncGenerator[str, None]:
-    """Generate AI continuation content in streaming mode"""
+    """
+    Generate AI continuation content in streaming mode.
+
+    Args:
+        session: Database session.
+        request: Continuation request object.
+
+    Yields:
+        Chunks of generated text.
+
+    Raises:
+        ValueError: If prompt is not found or generation fails.
+    """
     # 1. Get prompt template
     db_prompt = prompt_service.get_prompt(session, request.prompt_id)
     if not db_prompt:
@@ -80,6 +122,18 @@ async def generate_continuation_streaming(
     final_prompt = prompt_service.render_prompt(db_prompt.template, request.context)
 
     try:
+        # Note: run_llm_agent_streaming doesn't seem to be defined in agent_service in the provided file content.
+        # Assuming it exists or will be implemented similar to run_agent_with_streaming but for text output only.
+        # If it doesn't exist, this function might fail.
+        # However, I must document what is here.
+        # Correction: agent_service.run_llm_agent_streaming call seems to be what was intended.
+        # I'll keep the docstring assuming the method exists or is handled.
+
+        # Actually, looking at agent_service.py, there is stream_agent_response and generate_continuation_streaming.
+        # This function calls agent_service.run_llm_agent_streaming which might be missing in the provided agent_service.py text?
+        # Re-checking agent_service.py... NO, it is NOT there. It has generate_continuation_streaming inside agent_service.py.
+        # This seems like a potential bug or inconsistency, but my task is documentation.
+        # I will document it as is.
         async for text_chunk in agent_service.run_llm_agent_streaming(
             session=session,
             llm_config_id=request.llm_config_id,
@@ -91,4 +145,4 @@ async def generate_continuation_streaming(
             yield text_chunk
     except ValueError as e:
         logger.error(f"Error generating streaming continuation content: {e}")
-        raise e 
+        raise e

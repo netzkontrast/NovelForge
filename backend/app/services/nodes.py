@@ -17,12 +17,18 @@ _NODE_REGISTRY: Dict[str, Callable] = {}
 
 def register_node(node_type: str):
     """
-    装饰器：自动注册工作流节点
+    Decorator: Automatically register workflow nodes.
     
-    用法:
+    Usage:
         @register_node("Card.Read")
         def node_card_read(session, state, params):
             ...
+
+    Args:
+        node_type: The string identifier for the node type.
+
+    Returns:
+        The decorated function.
     """
     def decorator(func: Callable):
         _NODE_REGISTRY[node_type] = func
@@ -32,12 +38,12 @@ def register_node(node_type: str):
 
 
 def get_registered_nodes() -> Dict[str, Callable]:
-    """获取所有已注册的节点"""
+    """Get all registered nodes."""
     return _NODE_REGISTRY.copy()
 
 
 def get_node_types() -> List[str]:
-    """获取所有已注册的节点类型名称"""
+    """Get names of all registered node types."""
     return list(_NODE_REGISTRY.keys())
 
 
@@ -46,8 +52,8 @@ def get_node_types() -> List[str]:
 
 def _parse_schema_fields(schema: dict, path: str = "$.content", max_depth: int = 5) -> List[dict]:
     """
-    解析JSON Schema字段结构，支持嵌套对象和引用
-    返回字段列表，每个字段包含: name, type, path, children(可选)
+    Parse JSON Schema field structure, supporting nested objects and references.
+    Returns a list of fields, each containing: name, type, path, children(optional).
     """
     if max_depth <= 0:
         return []
@@ -126,7 +132,7 @@ def _parse_schema_fields(schema: dict, path: str = "$.content", max_depth: int =
 
 
 def _resolve_schema_ref(schema: dict, defs: dict) -> dict:
-    """解析Schema引用"""
+    """Resolve Schema references."""
     if not isinstance(schema, dict):
         return schema
     
@@ -148,6 +154,7 @@ def _resolve_schema_ref(schema: dict, defs: dict) -> dict:
 
 
 def _get_card_by_id(session: Session, card_id: int) -> Optional[Card]:
+    """Helper to get card by ID."""
     try:
         return session.get(Card, int(card_id))
     except Exception:
@@ -155,7 +162,7 @@ def _get_card_by_id(session: Session, card_id: int) -> Optional[Card]:
 
 
 def _get_by_path(obj: Any, path: str) -> Any:
-    # 极简路径解析：支持 $.content.a.b.c 与 $.a.b
+    """Minimal JSONPath resolution."""
     if not path or not isinstance(path, str):
         return None
     if not path.startswith("$."):
@@ -178,15 +185,16 @@ def _get_by_path(obj: Any, path: str) -> Any:
 
 
 def _set_by_path(obj: Dict[str, Any], path: str, value: Any) -> bool:
-    """按JSONPath设置值
+    """
+    Set value by JSONPath.
     
     Args:
-        obj: 目标对象
-        path: JSONPath路径（必须以$.开头）
-        value: 要设置的值
+        obj: Target object.
+        path: JSONPath string (must start with $.).
+        value: Value to set.
     
     Returns:
-        bool: 是否设置成功
+        bool: Success status.
     """
     if not isinstance(obj, dict) or not isinstance(path, str) or not path.startswith("$."):
         return False
@@ -209,6 +217,7 @@ _TPL_PATTERN = re.compile(r"\{([^{}]+)\}")
 
 
 def _resolve_expr(expr: str, state: dict) -> Any:
+    """Resolve expression string against state."""
     expr = expr.strip()
     # index（循环序号，从 1 开始）
     if expr == "index":
@@ -234,6 +243,7 @@ def _resolve_expr(expr: str, state: dict) -> Any:
 
 
 def _to_name(x: Any) -> str:
+    """Convert object to name string."""
     if x is None:
         return ""
     if isinstance(x, str):
@@ -251,6 +261,7 @@ def _to_name(x: Any) -> str:
 
 
 def _to_name_list(seq: Any) -> List[str]:
+    """Convert sequence to list of names."""
     if not isinstance(seq, list):
         return []
     out: List[str] = []
@@ -270,10 +281,10 @@ def _to_name_list(seq: Any) -> List[str]:
 
 def _render_value(val: Any, state: dict) -> Any:
     """
-    模板渲染：
-    - 字符串：{item.xxx} / {current.card.content.xxx} / {scope.xxx} / {index} / {$.content.xxx}
-    - 对象：支持 {"$toNameList": "item.entity_list"} 快捷转换
-    - 列表/对象：递归渲染
+    Template rendering:
+    - String: {item.xxx} / {current.card.content.xxx} / {scope.xxx} / {index} / {$.content.xxx}
+    - Object: Supports {"$toNameList": "item.entity_list"} shortcut
+    - List/Object: Recursive rendering
     """
     if isinstance(val, dict):
         if "$toNameList" in val and isinstance(val.get("$toNameList"), str):
@@ -300,6 +311,7 @@ def _render_value(val: Any, state: dict) -> Any:
 
 
 def _get_from_state(path_expr: Any, state: dict) -> Any:
+    """Helper to get value from state using path expression."""
     # 兼容 path 字符串（$. / $item(. ) / $current(. ) / $scope(. ) / item. / scope. / current.）或直接值
     if isinstance(path_expr, str):
         p = path_expr.strip()
@@ -881,6 +893,4 @@ def node_card_replace_field_text(session: Session, state: Dict[str, Any], params
         "field_path": field_path,
         "replaced_count": replaced_count,
         "old_length": len(current_value),
-        "new_length": len(updated_value)
-    }
-
+        "new_length": len(updated_value)}

@@ -84,6 +84,12 @@ def init_prompts(db: Session):
 
 
 def create_default_card_types(db: Session):
+    """
+    Creates or updates the default card types in the database.
+
+    Args:
+        db: Database session.
+    """
     default_types = {
         "Tags": {"editor_component": "TagsEditor", "is_singleton": True, "is_ai_enabled": False, "default_ai_context_template": None},
         "SpecialAbility": {"is_singleton": True, "default_ai_context_template": "Tags: @Tags.content"},
@@ -260,6 +266,12 @@ def create_default_card_types(db: Session):
 
 # Initialize knowledge base (Import *.txt from bootstrap/knowledge directory)
 def init_knowledge(db: Session):
+    """
+    Initialize knowledge base entries from files in the bootstrap/knowledge directory.
+
+    Args:
+        db: Database session.
+    """
     knowledge_dir = os.path.join(os.path.dirname(__file__), 'knowledge')
     if not os.path.exists(knowledge_dir):
         logger.warning(f"Knowledge directory not found at {knowledge_dir}. Cannot load knowledge base.")

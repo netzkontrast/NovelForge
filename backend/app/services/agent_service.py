@@ -58,17 +58,20 @@ def _estimate_tokens(text: str) -> int:
 from app.services import llm_config_service as _llm_svc
 
 def _calc_input_tokens(system_prompt: Optional[str], user_prompt: Optional[str]) -> int:
+    """Calculate input tokens from system and user prompts."""
     sys_part = system_prompt or ""
     usr_part = user_prompt or ""
     return _estimate_tokens(sys_part+usr_part) 
 
 
-def _precheck_quota(session: Session, llm_config_id: int, input_tokens: int, need_calls: int = 1) -> None:
+def _precheck_quota(session: Session, llm_config_id: int, input_tokens: int, need_calls: int = 1) -> tuple[bool, str]:
+    """Check if LLM quota is sufficient."""
     ok, reason = _llm_svc.can_consume(session, llm_config_id, input_tokens, 0, need_calls)
     return ok,reason
 
 
 def _record_usage(session: Session, llm_config_id: int, input_tokens: int, output_tokens: int, calls: int = 1, aborted: bool = False) -> None:
+    """Record LLM usage statistics."""
     try:
         _llm_svc.accumulate_usage(session, llm_config_id, max(0, input_tokens), max(0, output_tokens), max(0, calls), aborted=aborted)
     except Exception as stat_e:
@@ -88,9 +91,19 @@ def _get_agent(
     Get a configured LLM Agent instance based on LLM config and expected output type.
     Unified use of ModelSettings to set temperature/max_tokens/timeout.
     
-    - deps_type: Dependency injection type (default str)
-    - tools: Tool list (Pydantic AI Tool objects)
-    - output_type: Output type (None means allow text and tool calls)
+    Args:
+        session: Database session.
+        llm_config_id: ID of the LLM configuration.
+        output_type: Expected output Pydantic model type (optional).
+        system_prompt: System prompt string.
+        temperature: Sampling temperature.
+        max_tokens: Maximum tokens to generate.
+        timeout: Request timeout.
+        deps_type: Dependency injection type (default str).
+        tools: List of tools (Pydantic AI Tool objects).
+
+    Returns:
+        Configured Agent instance.
     """
     llm_config = llm_config_service.get_llm_config(session, llm_config_id)
     if not llm_config:
@@ -167,6 +180,16 @@ async def run_agent_with_streaming(agent: Agent, *args, **kwargs):
 
 
 def check_tool_call(parts: list,is_in_retry_state: bool) -> bool:
+    """
+    Check if a tool call is valid in the response parts.
+
+    Args:
+        parts: Response parts from the model.
+        is_in_retry_state: Whether currently in a retry state.
+
+    Returns:
+        True if tool call is valid or not needed, False otherwise.
+    """
     need_tool_call=is_in_retry_state
     include_tool_call=False
     for part in parts:
@@ -685,6 +708,22 @@ async def run_llm_agent(
     """
     运行LLM Agent的核心封装。
     支持温度/最大tokens/超时（通过 ModelSettings 注入）。
+
+    Args:
+        session: 数据库会话
+        llm_config_id: LLM 配置 ID
+        user_prompt: 用户提示词
+        output_type: 期望的输出模型类型
+        system_prompt: 系统提示词
+        deps: 依赖注入
+        max_tokens: 最大生成 tokens
+        max_retries: 最大重试次数
+        temperature: 温度
+        timeout: 超时时间
+        track_stats: 是否记录统计信息
+
+    Returns:
+        解析后的输出模型实例
     """
     # 限额预检（按估算的输入 tokens + 1 次调用）
     if track_stats:
@@ -749,6 +788,7 @@ async def generate_assistant_chat_streaming(
     灵感助手专用流式对话生成。
     
     参数：
+    - session: 数据库会话
     - request: AssistantChatRequest（包含对话历史、卡片上下文等）
     - system_prompt: 系统提示词
     - tools: 工具函数列表（直接传函数，符合 Pydantic AI 标准用法）
@@ -889,6 +929,15 @@ async def generate_assistant_chat_streaming_react(
     2. **JSON 格式**：使用 json_repair 自动修复常见错误，但仍建议提示词中强调正确格式
     3. **工具结果反馈**：工具执行结果会通过 __TOOL_EXECUTED__ 协议标记发送给前端
     4. **对话历史**：工具调用记录会被前端添加到对话历史中，供后续对话参考
+
+    Args:
+        session: 数据库会话
+        request: 请求对象
+        system_prompt: 系统提示词
+        track_stats: 是否记录统计
+
+    Yields:
+        流式响应块
     """
     from app.services.assistant_tools.pydantic_ai_tools import (
         search_cards, create_card, modify_card_field, replace_field_text,
@@ -1024,7 +1073,18 @@ async def generate_assistant_chat_streaming_react(
 
 
 async def generate_continuation_streaming(session: Session, request: ContinuationRequest, system_prompt: str, track_stats: bool = True) -> AsyncGenerator[str, None]:
-    """以流式方式生成续写内容。system_prompt 由外部显式传入。"""
+    """
+    以流式方式生成续写内容。system_prompt 由外部显式传入。
+
+    Args:
+        session: 数据库会话
+        request: 续写请求
+        system_prompt: 系统提示词
+        track_stats: 是否记录统计
+
+    Yields:
+        流式响应块
+    """
     # 组装用户消息
     user_prompt_parts = []
     
@@ -1127,14 +1187,22 @@ async def generate_continuation_streaming(session: Session, request: Continuatio
 
 
 def create_validator(model_type: Type[BaseModel]) -> Callable[[Any, Any], Awaitable[BaseModel]]:
-    '''创建通用的结果验证器'''
+    '''
+    Create a generic result validator.
+
+    Args:
+        model_type: The expected Pydantic model type.
+
+    Returns:
+        A validation function.
+    '''
 
     async def validate_result(
         ctx: Any,
         result: Response,
     ) -> Response:
         """
-        通用结果验证函数
+        Generic result validation function.
         """
         try:
             if model_type is BaseModel or model_type is str: 

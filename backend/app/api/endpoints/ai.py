@@ -31,6 +31,9 @@ from typing import Any as _Any, Dict as _Dict, List as _List
 
 # Schema filtering based on metadata (remove fields marked with x-ai-exclude=true)
 def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively filter schema to remove fields marked with x-ai-exclude=true.
+    """
     def prune(node: Any, parent_required: List[str] | None = None) -> Any:
         if isinstance(node, dict):
             # Object: Filter fields marked with x-ai-exclude in properties
@@ -91,6 +94,7 @@ def _filter_schema_for_ai(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _json_schema_to_py_type(sch: Dict[str, Any]) -> Any:
+    """Convert a JSON Schema fragment to a Python type hint."""
     if not isinstance(sch, dict):
         return _Any
     if '$ref' in sch:
@@ -116,6 +120,7 @@ def _json_schema_to_py_type(sch: Dict[str, Any]) -> Any:
 
 
 def _build_model_from_json_schema(model_name: str, schema: Dict[str, Any]):
+    """Dynamically create a Pydantic model from a JSON Schema."""
     props: Dict[str, Any] = (schema or {}).get('properties') or {}
     required: List[str] = list((schema or {}).get('required') or [])
     field_defs: Dict[str, tuple] = {}
@@ -134,6 +139,7 @@ def _build_model_from_json_schema(model_name: str, schema: Dict[str, Any]):
 _BUILTIN_DEFS_CACHE: Dict[str, Any] | None = None
 
 def _get_builtin_defs() -> Dict[str, Any]:
+    """Get built-in schema definitions."""
     global _BUILTIN_DEFS_CACHE
     if _BUILTIN_DEFS_CACHE is not None:
         return _BUILTIN_DEFS_CACHE
@@ -146,6 +152,7 @@ def _get_builtin_defs() -> Dict[str, Any]:
     return merged
 
 def _collect_ref_names(node: Any) -> set[str]:
+    """Collect reference names from a schema."""
     names: set[str] = set()
     if isinstance(node, dict):
         if '$ref' in node and isinstance(node['$ref'], str) and node['$ref'].startswith('#/$defs/'):
@@ -158,6 +165,7 @@ def _collect_ref_names(node: Any) -> set[str]:
     return names
 
 def _augment_schema_with_builtin_defs(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Augment schema with built-in definitions."""
     # Do not modify original object
     sch = deepcopy(schema) if schema is not None else {}
     if not isinstance(sch, dict):
@@ -183,6 +191,7 @@ def _augment_schema_with_builtin_defs(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 # --- Dynamic injection of CardType defs (same idea as cards.py) ---
 def _compose_with_card_types(session: Session, schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Inject CardType definitions into schema."""
     sch = deepcopy(schema) if isinstance(schema, dict) else {}
     if not isinstance(sch, dict):
         return sch
@@ -352,11 +361,13 @@ def get_all_schemas(session: Session = Depends(get_session)):
 
 @router.get("/content-models", response_model=List[str], summary="Get all available output model names")
 def get_content_models(session: Session = Depends(get_session)):
+    """Get available output model names (built-in only)."""
     # Only return built-in model names
     return list(RESPONSE_MODEL_MAP.keys())
 
 
 async def stream_wrapper(generator):
+    """Wrap generator for SSE output."""
     async for item in generator:
         yield f"data: {json.dumps({'content': item})}\n\n"
 
@@ -381,6 +392,7 @@ async def get_ai_config_options(session: Session = Depends(get_session)):
 
 @router.get("/prompts/render", summary="Render and inject knowledge base into prompt template")
 async def render_prompt_with_knowledge(name: str, session: Session = Depends(get_session)):
+    """Render prompt template with knowledge base content injected."""
     p = prompt_service.get_prompt_by_name(session, name)
     if not p or not p.template:
         raise HTTPException(status_code=404, detail=f"Prompt not found: {name}")
@@ -521,4 +533,4 @@ async def generate_continuation(
 from app.schemas.wizard import Tags as _Tags
 @router.get("/models/tags", response_model=_Tags, summary="Export Tags model (for type generation)")
 def export_tags_model():
-    return _Tags() 
+    return _Tags()

@@ -1,8 +1,12 @@
+"""
+Entry point for running the backend application using Uvicorn.
+Handles compatibility for PyInstaller packaged environments.
+"""
 import sys
 
-# PyInstaller 兼容性：必须在导入其他模块之前执行
+# PyInstaller compatibility: Must be executed before importing other modules
 if getattr(sys, 'frozen', False):
-    # 运行在 PyInstaller 打包环境中
+    # Running in PyInstaller packaged environment
     import inspect
     
     _original_getsource = inspect.getsource
@@ -36,4 +40,4 @@ from uvicorn import run
 from main import app
  
 if __name__ == "__main__":
-	run(app, host="127.0.0.1", port=8000, log_level="info") 
+	run(app, host="127.0.0.1", port=8000, log_level="info")

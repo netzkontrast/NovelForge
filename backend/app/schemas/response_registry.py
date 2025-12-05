@@ -34,4 +34,8 @@ RESPONSE_MODEL_MAP: Dict[str, Any] = {
 	# Explicitly export nested types for frontend field tree parsing
 	'StageLine': StageLine,
 	'StoryLine': StoryLine,
-} 
+}
+"""
+Mapping of response model names to their corresponding Pydantic classes.
+Used for dynamic model resolution and OpenAPI documentation.
+"""
