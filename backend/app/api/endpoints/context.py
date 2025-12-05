@@ -10,6 +10,16 @@ router = APIRouter()
 
 @router.post("/assemble", response_model=AssembleContextResponse, summary="Assemble writing context (fact subgraph)")
 def assemble(req: AssembleContextRequest, session: Session = Depends(get_session)):
+    """
+    Assemble the writing context, including the fact subgraph.
+
+    Args:
+        req: The request containing parameters for context assembly.
+        session: The database session.
+
+    Returns:
+        An AssembleContextResponse containing the assembled context.
+    """
     params = ContextAssembleParams(
         project_id=req.project_id,
         volume_number=req.volume_number,

@@ -19,12 +19,34 @@ RelationKind = Literal[
 
 
 class RecentEventSummary(BaseModel):
+    """
+    Model for summarizing a recent event.
+
+    Attributes:
+        summary: One sentence summary of recent event between A and B.
+        volume_number: Volume number occurred (Optional).
+        chapter_number: Chapter number occurred (Optional).
+    """
     summary: str = Field(description="One sentence summary of recent event between A and B (Suggest merging into one for this extraction)")
     volume_number: Optional[int] = Field(default=None, description="Volume number occurred (Leave empty, system can auto-fill)")
     chapter_number: Optional[int] = Field(default=None, description="Chapter number occurred (Leave empty, system can auto-fill)")
 
 
 class RelationItem(BaseModel):
+    """
+    Model for a single relation item between two entities.
+
+    Attributes:
+        a: Entity A name.
+        b: Entity B name.
+        kind: Type of relation.
+        description: Brief text description of this relation.
+        a_to_b_addressing: A's addressing term for B.
+        b_to_a_addressing: B's addressing term for A.
+        recent_dialogues: List of recent dialogue fragments.
+        recent_event_summaries: List of recent event summaries.
+        stance: A's overall stance towards B (Friendly/Neutral/Hostile).
+    """
     a: str = Field(description="Entity A name (one of participants)")
     b: str = Field(description="Entity B name (one of participants)")
     kind: RelationKind = Field(description="Relation type (English)")
@@ -40,4 +62,10 @@ class RelationItem(BaseModel):
 
 
 class RelationExtraction(BaseModel):
+    """
+    Model for extracted relations.
+
+    Attributes:
+        relations: List of extracted relation items.
+    """
     relations: List[RelationItem] = Field(default_factory=list)

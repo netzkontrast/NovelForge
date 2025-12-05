@@ -22,6 +22,9 @@ def get_session():
     """
     FastAPI dependency that provides a transactional database session.
     It ensures that the session is committed on success and rolled back on error.
+
+    Yields:
+        session: A SQLModel Session object.
     """
     session = Session(engine)
     try:
@@ -31,4 +34,4 @@ def get_session():
         session.rollback()
         raise
     finally:
-        session.close() 
+        session.close()

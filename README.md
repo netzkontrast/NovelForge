@@ -444,7 +444,7 @@ The system presets multiple common workflows, which can be used directly or as r
 
 When creating a new project, you can choose a workflow with an `onprojectcreate` trigger as the project template:
 
-- Default selection "Project Creation · Snowflake Method", automatically creating work tags, cheats, one-sentence summary, story outline, worldview settings, core blueprint, etc. cards.
+- Default selection "Project Creation · Snowflake Method", automatically creating work tags, cheats, one-sentence summary, story outline, worldview settings, core blueprint, etc.
 - You can also create your own project initialization workflow in Workflow Studio to fully customize the project starting structure.
 - Supports complex initialization logic, such as creating different card structures based on conditions.
 

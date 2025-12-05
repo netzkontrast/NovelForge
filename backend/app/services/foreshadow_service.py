@@ -14,10 +14,18 @@ class ForeshadowService:
 
     def suggest(self, text: str) -> Dict[str, Any]:
         """
+        Extract potential foreshadowing items from text using simple heuristics.
+
         Minimal heuristic:
         - Capture phrases after "will/prepare/plan/vow/must" as pending goals
         - Capture nouns ending with 'sword/knife/ring/talisman/seal/pill/array/armor/cauldron/bead/mirror' as suspicious items
         - Roughly extract 2-4 character names (excluding common function words)
+
+        Args:
+            text: Input text to analyze.
+
+        Returns:
+            Dictionary with keys 'goals', 'items', 'persons', each containing a list of strings.
         """
         if not isinstance(text, str):
             text = str(text or "")
@@ -53,6 +61,16 @@ class ForeshadowService:
 
     # --- CRUD via DB ---
     def list(self, project_id: int, status: Optional[str] = None) -> List[ForeshadowItemModel]:
+        """
+        List foreshadowing items for a project.
+
+        Args:
+            project_id: Project ID.
+            status: Optional status to filter by (e.g. 'open', 'resolved').
+
+        Returns:
+            List of ForeshadowItemModel.
+        """
         stmt = select(ForeshadowItemModel).where(ForeshadowItemModel.project_id == project_id)
         if status:
             stmt = stmt.where(ForeshadowItemModel.status == status)
@@ -60,6 +78,16 @@ class ForeshadowService:
         return items
 
     def register(self, project_id: int, entries: List[Dict[str, Any]]) -> List[ForeshadowItemModel]:
+        """
+        Register new foreshadowing items.
+
+        Args:
+            project_id: Project ID.
+            entries: List of dictionaries containing item details (title, type, note, chapter_id).
+
+        Returns:
+            List of created ForeshadowItemModel.
+        """
         out: List[ForeshadowItemModel] = []
         for it in entries:
             title = str(it.get('title') or '').strip()
@@ -82,6 +110,16 @@ class ForeshadowService:
         return out
 
     def resolve(self, project_id: int, item_id: str | int) -> Optional[ForeshadowItemModel]:
+        """
+        Mark a foreshadowing item as resolved.
+
+        Args:
+            project_id: Project ID.
+            item_id: Item ID.
+
+        Returns:
+            Updated ForeshadowItemModel or None if not found/mismatch.
+        """
         item = self.session.get(ForeshadowItemModel, item_id)
         if not item or item.project_id != project_id:
             return None
@@ -94,9 +132,19 @@ class ForeshadowService:
         return item
 
     def delete(self, project_id: int, item_id: str | int) -> bool:
+        """
+        Delete a foreshadowing item.
+
+        Args:
+            project_id: Project ID.
+            item_id: Item ID.
+
+        Returns:
+            True if deleted, False if not found/mismatch.
+        """
         item = self.session.get(ForeshadowItemModel, item_id)
         if not item or item.project_id != project_id:
             return False
         self.session.delete(item)
         self.session.commit()
-        return True 
+        return True

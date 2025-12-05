@@ -57,6 +57,7 @@ def get_workflow_node_types():
 
 @router.get("/workflows", response_model=List[WorkflowRead])
 def list_workflows(session: Session = Depends(get_session)):
+    """List all workflows."""
     return session.exec(select(Workflow)).all()
 
 
@@ -68,6 +69,7 @@ def list_triggers(session: Session = Depends(get_session)):
 
 @router.post("/workflow-triggers", response_model=WorkflowTriggerRead)
 def create_trigger(payload: WorkflowTriggerCreate, session: Session = Depends(get_session)):
+    """Create a new workflow trigger."""
     t = WorkflowTrigger(**payload.model_dump())
     session.add(t)
     session.commit()
@@ -76,6 +78,7 @@ def create_trigger(payload: WorkflowTriggerCreate, session: Session = Depends(ge
 
 @router.put("/workflow-triggers/{trigger_id}", response_model=WorkflowTriggerRead)
 def update_trigger(trigger_id: int, payload: WorkflowTriggerUpdate, session: Session = Depends(get_session)):
+    """Update a workflow trigger."""
     t = session.get(WorkflowTrigger, trigger_id)
     if not t:
         raise HTTPException(status_code=404, detail="Trigger not found")
@@ -88,6 +91,7 @@ def update_trigger(trigger_id: int, payload: WorkflowTriggerUpdate, session: Ses
 
 @router.delete("/workflow-triggers/{trigger_id}")
 def delete_trigger(trigger_id: int, session: Session = Depends(get_session)):
+    """Delete a workflow trigger."""
     t = session.get(WorkflowTrigger, trigger_id)
     if not t:
         raise HTTPException(status_code=404, detail="Trigger not found")
@@ -98,6 +102,7 @@ def delete_trigger(trigger_id: int, session: Session = Depends(get_session)):
 
 @router.post("/workflows", response_model=WorkflowRead)
 def create_workflow(payload: WorkflowCreate, session: Session = Depends(get_session)):
+    """Create a new workflow."""
     wf = Workflow(**payload.model_dump())
     session.add(wf)
     session.commit()
@@ -107,6 +112,7 @@ def create_workflow(payload: WorkflowCreate, session: Session = Depends(get_sess
 
 @router.get("/workflows/{workflow_id}", response_model=WorkflowRead)
 def get_workflow(workflow_id: int, session: Session = Depends(get_session)):
+    """Get a workflow by ID."""
     wf = session.get(Workflow, workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -115,6 +121,7 @@ def get_workflow(workflow_id: int, session: Session = Depends(get_session)):
 
 @router.put("/workflows/{workflow_id}", response_model=WorkflowRead)
 def update_workflow(workflow_id: int, payload: WorkflowUpdate, session: Session = Depends(get_session)):
+    """Update a workflow."""
     wf = session.get(Workflow, workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -128,6 +135,7 @@ def update_workflow(workflow_id: int, payload: WorkflowUpdate, session: Session 
 
 @router.delete("/workflows/{workflow_id}")
 def delete_workflow(workflow_id: int, session: Session = Depends(get_session)):
+    """Delete a workflow."""
     wf = session.get(Workflow, workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -138,6 +146,7 @@ def delete_workflow(workflow_id: int, session: Session = Depends(get_session)):
 
 @router.post("/workflows/{workflow_id}/run", response_model=WorkflowRunRead)
 def run_workflow(workflow_id: int, req: RunRequest, session: Session = Depends(get_session)):
+    """Run a workflow."""
     wf = session.get(Workflow, workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -149,6 +158,7 @@ def run_workflow(workflow_id: int, req: RunRequest, session: Session = Depends(g
 
 @router.get("/workflows/runs/{run_id}", response_model=WorkflowRunRead)
 def get_run(run_id: int, session: Session = Depends(get_session)):
+    """Get a workflow run by ID."""
     run = session.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
@@ -157,6 +167,7 @@ def get_run(run_id: int, session: Session = Depends(get_session)):
 
 @router.post("/workflows/{workflow_id}/validate")
 def validate_workflow(workflow_id: int, session: Session = Depends(get_session)):
+    """Validate a workflow definition."""
     wf = session.get(Workflow, workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -245,16 +256,16 @@ def validate_workflow(workflow_id: int, session: Session = Depends(get_session))
 
 @router.post("/workflows/runs/{run_id}/cancel", response_model=CancelResponse)
 def cancel_run(run_id: int):
+    """Cancel a workflow run."""
     ok = wf_engine.cancel(run_id)
     return CancelResponse(ok=ok, message="cancelled" if ok else "not running")
 
 
 @router.get("/workflows/runs/{run_id}/events")
 async def stream_events(run_id: int):
+    """Stream events for a workflow run."""
     async def event_publisher():
         async for evt in wf_engine.subscribe_events(run_id):
             yield evt
 
     return StreamingResponse(event_publisher(), media_type="text/event-stream")
-
-

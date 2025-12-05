@@ -68,6 +68,7 @@ _ALLOWED_PAIRS: Dict[str, List[Tuple[str, str]]] = {
 # }
 
 def _guess_entity_type(session: Session, project_id: int, name: str) -> Optional[str]:
+    """Guess entity type by checking card content in the project."""
     try:
         # Find card with title == name in project, read its type name
         st = select(Card).where(Card.project_id == project_id, Card.title == name)
@@ -105,6 +106,19 @@ class MemoryService:
         self.graph = get_provider()
 
     async def extract_relations_llm(self, text: str, participants: Optional[List[ParticipantTyped]] = None, llm_config_id: int = 1, timeout: Optional[float] = None, prompt_name: Optional[str] = "关系提取") -> RelationExtraction:
+        """
+        Extract relations from text using LLM.
+
+        Args:
+            text: Text to analyze.
+            participants: List of participants.
+            llm_config_id: LLM config ID.
+            timeout: Timeout.
+            prompt_name: Prompt name.
+
+        Returns:
+            RelationExtraction object.
+        """
         # Prioritize default prompt, fallback to hardcoded if not exists
         prompt = prompt_service.get_prompt_by_name(self.session, prompt_name)
         system_prompt = prompt.template
@@ -132,7 +146,22 @@ class MemoryService:
         return res
 
     async def extract_dynamic_info_from_text(self, text: str, participants: Optional[List[ParticipantTyped]] = None, llm_config_id: int = 1, timeout: Optional[float] = None, prompt_name: Optional[str] = "角色动态信息提取", project_id: Optional[int] = None, extra_context: Optional[str] = None) -> UpdateDynamicInfo:
-        """Extract dynamic info for specified participants from text. extra_context assembled by frontend (can contain volume main/branch line, stage summary etc.)."""
+        """
+        Extract dynamic info for specified participants from text.
+        extra_context assembled by frontend (can contain volume main/branch line, stage summary etc.).
+
+        Args:
+            text: Text to analyze.
+            participants: List of participants.
+            llm_config_id: LLM config ID.
+            timeout: Timeout.
+            prompt_name: Prompt name.
+            project_id: Project ID.
+            extra_context: Extra context string.
+
+        Returns:
+            UpdateDynamicInfo object.
+        """
         prompt = prompt_service.get_prompt_by_name(self.session, prompt_name)
         if not prompt:
             raise ValueError(f"Prompt not found: {prompt_name}")
@@ -222,6 +251,20 @@ class MemoryService:
         top_k: int = 50,
         max_chapter_id: Optional[int] = None,
     ) -> Dict[str, Any]:
+        """
+        Query the knowledge graph for a subgraph.
+
+        Args:
+            project_id: Project ID.
+            participants: List of participants.
+            radius: Radius.
+            edge_type_whitelist: Allowed edge types.
+            top_k: Max results.
+            max_chapter_id: Max chapter ID.
+
+        Returns:
+            Subgraph dictionary.
+        """
         return self.graph.query_subgraph(
             project_id=project_id,
             participants=participants,
@@ -232,6 +275,19 @@ class MemoryService:
         )
 
     def ingest_relations_from_llm(self, project_id: int, data: RelationExtraction, *, volume_number: Optional[int] = None, chapter_number: Optional[int] = None, participants_with_type: Optional[List[ParticipantTyped]] = None) -> Dict[str, Any]:
+        """
+        Ingest extracted relations into the knowledge graph.
+
+        Args:
+            project_id: Project ID.
+            data: RelationExtraction object.
+            volume_number: Volume number.
+            chapter_number: Chapter number.
+            participants_with_type: List of typed participants.
+
+        Returns:
+            Dictionary with number of written relations and merged evidence.
+        """
         # Write relation triples; also minimize persistence of addressing/event summary/stance (as searchable evidence)
         # tuples: (subject, relation, object, attributes_dict)
         triples_with_attrs: List[tuple[str, str, str, Dict[str, Any]]] = []
@@ -385,6 +441,14 @@ class MemoryService:
         """
         Update character card dynamic info, supports add and delete.
         Max limit per category uses DYNAMIC_INFO_LIMITS config; if not configured, fallback to queue_size (default 3).
+
+        Args:
+            project_id: Project ID.
+            data: UpdateDynamicInfo object.
+            queue_size: Default queue size limit.
+
+        Returns:
+            Dictionary with success status and updated card count.
         """
         from app.schemas.entity import CharacterCard
 

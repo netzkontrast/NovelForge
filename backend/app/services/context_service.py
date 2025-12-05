@@ -15,6 +15,18 @@ from app.services.kg_provider import get_provider
 
 @dataclass
 class ContextAssembleParams:
+    """
+    Parameters for context assembly.
+
+    Attributes:
+        project_id: Project ID.
+        volume_number: Volume number.
+        chapter_number: Chapter number.
+        participants: List of participant names.
+        current_draft_tail: Tail of the current draft.
+        recent_chapters_window: Window size for recent chapters.
+        chapter_id: Chapter ID.
+    """
     project_id: Optional[int]
     volume_number: Optional[int]
     chapter_number: Optional[int]
@@ -26,11 +38,20 @@ class ContextAssembleParams:
 
 @dataclass
 class AssembledContext:
+    """
+    Result of context assembly.
+
+    Attributes:
+        facts_subgraph: Text representation of fact subgraph.
+        budget_stats: Statistics about context budget.
+        facts_structured: Structured fact subgraph.
+    """
     facts_subgraph: str
     budget_stats: Dict[str, Any]
     facts_structured: Optional[Dict[str, Any]] = None
 
     def to_system_prompt_block(self) -> str:
+        """Convert to a system prompt block string."""
         parts: List[str] = []
         if self.facts_subgraph:
             parts.append(f"[Fact Subgraph]\n{self.facts_subgraph}")
@@ -38,17 +59,29 @@ class AssembledContext:
 
 
 def _truncate(text: str, limit: int) -> str:
+    """Truncate text to limit."""
     if len(text) <= limit:
         return text
     return text[: max(0, limit - 200)] + "\n...[Truncated]"
 
 
 def _compose_facts_subgraph_stub() -> str:
+    """Compose a stub for empty facts subgraph."""
     return "Key Facts: None (Not yet collected)."
 
 
 
 def assemble_context(session: Session, params: ContextAssembleParams) -> AssembledContext:
+    """
+    Assemble context for AI generation.
+
+    Args:
+        session: Database session.
+        params: Context assembly parameters.
+
+    Returns:
+        AssembledContext object.
+    """
     facts_quota = 5000
 
     eff_participants: List[str] = list(params.participants or [])
@@ -121,4 +154,4 @@ def assemble_context(session: Session, params: ContextAssembleParams) -> Assembl
         facts_subgraph=facts,
         budget_stats={},
         facts_structured=facts_structured,
-    ) 
+    )

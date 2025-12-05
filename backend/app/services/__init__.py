@@ -1,1 +1,10 @@
-# 为避免循环依赖，不在此处导入子模块。仅作为命名空间包保留。 
+"""
+This module exports the services for the application.
+"""
+from .project_service import (
+    create_project,
+    get_project,
+    get_projects,
+    update_project,
+    delete_project,
+)

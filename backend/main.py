@@ -2,6 +2,10 @@ import os, sys
 from dotenv import load_dotenv
 
 def _load_env_from_nearby():
+    """
+    Load .env configuration from nearby locations.
+    Checks executable directory (if frozen), backend directory, and current working directory.
+    """
     candidates = []
     if getattr(sys, "frozen", False):
         exe_dir = os.path.dirname(sys.executable)
@@ -32,6 +36,7 @@ from app.bootstrap.init_app import init_reserved_project
 from app.bootstrap.init_app import init_workflows
 
 def init_db():
+    """Initialize the database by creating all tables."""
     models.SQLModel.metadata.create_all(engine)
 
 # Create all tables
@@ -42,6 +47,10 @@ from contextlib import asynccontextmanager
 # Use lifespan event handler instead of on_event
 @asynccontextmanager
 async def lifespan(app):
+    """
+    Lifespan context manager for the FastAPI application.
+    Handles startup (DB initialization, data bootstrapping) and shutdown.
+    """
     # Run on startup
     # Ensure all tables exist (Available for development; production suggests migration via Alembic)
     models.SQLModel.metadata.create_all(engine)
@@ -84,6 +93,7 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 def read_root():
+    """Root endpoint to check API status."""
     return {"message": "Welcome to NovelCreationEditor API"}
 
 if __name__ == "__main__":
@@ -97,4 +107,3 @@ if __name__ == "__main__":
         reload=True,
         timeout_graceful_shutdown=1,
     )
-

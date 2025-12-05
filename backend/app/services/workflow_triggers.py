@@ -7,6 +7,7 @@ from app.services.workflow_engine import engine as wf_engine
 
 
 def _match_triggers_for_card(session: Session, event: str, card: Card) -> List[WorkflowTrigger]:
+    """Helper to find matching triggers for a card event."""
     q = select(WorkflowTrigger).where(
         WorkflowTrigger.trigger_on == event,
         WorkflowTrigger.is_active == True,  # noqa: E712
@@ -27,12 +28,14 @@ _DEBOUNCE_MS = 1500  # Same key won't trigger again within this window
 
 
 def _make_idempotency_key(event: str, workflow_id: int, card: Card | None, project_id: int | None) -> str:
+    """Generate idempotency key."""
     card_id = getattr(card, "id", None) or 0
     proj_id = project_id or getattr(card, "project_id", None) or 0
     return f"evt:{event}|wf:{workflow_id}|card:{card_id}|proj:{proj_id}"
 
 
 def _should_suppress(session: Session, key: str, workflow_id: int) -> bool:
+    """Check if trigger should be suppressed (debouncing/duplication check)."""
     # 1) In-process debounce
     now = monotonic()
     last = _recent_keys.get(key)

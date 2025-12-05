@@ -15,6 +15,13 @@ from .entity import EntityType as EntityType
 class Tags(BaseModel):
     """
     Unified Tag Model.
+
+    Attributes:
+        theme: Theme category, format: Main-Sub.
+        audience: Target audience (General/Male/Female).
+        narrative_person: Narrative perspective (First/Third).
+        story_tags: List of category tags and weight levels.
+        affection: Emotional relationship tag.
     """
     theme: str = Field(default="", description="Theme category, format: Main-Sub")
     audience: Literal['通用','男生', '女生'] = Field(default='通用', description="Target audience (General/Male/Female)")
@@ -24,24 +31,49 @@ class Tags(BaseModel):
 
 
 class SpecialAbility(BaseModel):
+    """
+    Model for a Special Ability.
+
+    Attributes:
+        name: Name of the special ability/cheat.
+        description: Detailed description of the special ability.
+    """
     name: str = Field(description="Name of the special ability/cheat")
     description: str = Field(description="Detailed description of the special ability")
 
 
 class SpecialAbilityResponse(BaseModel):
-    """0: Request model for designing special ability based on tags"""
+    """
+    0: Request model for designing special ability based on tags.
+
+    Attributes:
+        special_abilities_thinking: Creative thinking process from tags to special ability.
+        special_abilities: Main special ability info.
+    """
     special_abilities_thinking: str = Field(description="Creative thinking process from tags to special ability.",examples=["Sample output, for learning thinking process only, do not be influenced by specific content: Based on tags 'Rebirth' and 'Invincible Flow', I need to design a cheat that allows the protagonist to constantly try and become stronger, eventually reaching an invincible state. Simply rebirth once is not enough to support the long-term development of 'Invincible Flow', so deepen the 'Rebirth' feature into 'Infinite Resurrection and Time Regression' ability, retaining experience and memory each resurrection. This fits 'Rebirth' and provides logical support for protagonist's 'Invincible' path. Also combining 'Otherworld Continent' and 'Civilization Deduction' background, this ability allows protagonist to accumulate knowledge and experience through repeated trial and error when facing unknown world, achieving dimensional strike and rising rapidly. This cheat setting can create strong expectation for readers on how protagonist uses this ability to solve dilemmas and overturn old order."])
     special_abilities: Optional[List[SpecialAbility]] = Field(None, description="Main special ability info. Can be specific systems, simulators etc., or some advantage/talent/physique etc. e.g. protagonist rebirth or time travel, their foreknowledge is also a cheat.")
 
 
 class OneSentence(BaseModel):
-    """1: Request model for designing one-sentence summary based on tags and special ability"""
+    """
+    1: Request model for designing one-sentence summary based on tags and special ability.
+
+    Attributes:
+        one_sentence_thinking: Creative thinking process from tags/special ability to one-sentence summary.
+        one_sentence: One sentence summary of the entire novel.
+    """
     one_sentence_thinking: str = Field(description="Creative thinking process from tags/special ability to one-sentence summary.",examples=["Sample output, for learning thinking process only: Considering 'Fantasy-Otherworld Continent' theme and 'Time Travel', 'Otherworld Science Flow' tags, I first need to build a cross-world story framework. Modern kendo master meeting otherworld mage is a good entry point, 'Forbidden Magic Portal' cheat provides reasonable opportunity. Also 'Single CP' emotional tag requires this relationship to be an important clue. 'Civilization Collision' and 'Otherworld Science Flow' tags suggest protagonist brings modern knowledge advantage, forming unique conflict and spectacle. Combining these elements, I decided to build a story about modern person entering magic world, influencing entire otherworld fate through knowledge advantage and personal growth."])
     one_sentence: str = Field(description="One sentence summary of the entire novel")
 
 
 class ParagraphOverview(BaseModel):
-    """2: Request model for expanding one-sentence summary to paragraph overview"""
+    """
+    2: Request model for expanding one-sentence summary to paragraph overview.
+
+    Attributes:
+        overview_thinking: Creative thinking process from one-sentence summary to paragraph outline.
+        overview: Expanded novel outline.
+    """
     overview_thinking: str = Field(description="Creative thinking process from one-sentence summary to paragraph outline.",examples=["Sample output, for learning thinking process only: Based on one-sentence summary, further think about specific story unfolding. Starting from 'Time Travel' tag, need to explain protagonist's identity change and initial dilemma. 'Villain Flow' and 'Behind-the-scenes Flow' determine protagonist must use non-traditional villain means. 'Farming Flow' suggests detailed description of demon society development process. 'Arrogance Talent' cheat provides unique way for protagonist to solve problems. The whole story needs to show how protagonist uses modern thinking and resourcefulness to complete demon transformation and peaceful infiltration of human world within limited time."])
     overview: str = Field(description="Expanded novel outline")
     
@@ -49,7 +81,15 @@ class ParagraphOverview(BaseModel):
 # --- Simplified AI Request Model ---
 
 class SimpleAIRequest(BaseModel):
-    """Simplified AI request model, directly passing string input"""
+    """
+    Simplified AI request model, directly passing string input.
+
+    Attributes:
+        input_text: String input constructed according to training data format.
+        llm_config_id: LLM Config ID (default 1).
+        prompt_name: Prompt name, use task name if not specified.
+        response_model_name: Response model name.
+    """
     input_text: str = Field(description="String input constructed according to training data format")
     llm_config_id: Optional[int] = Field(default=1, description="LLM Config ID")
     prompt_name: Optional[str] = Field(description="Prompt name, use task name if not specified")
@@ -58,6 +98,16 @@ class SimpleAIRequest(BaseModel):
 
 
 class SocialSystem(BaseModel):
+    """
+    Model for Social System.
+
+    Attributes:
+        power_structure: Power structure (e.g., Feudal Dynasty/Capital Federation).
+        currency_system: Currency system list.
+        background: Power structure background, history legends etc.
+        major_power_camps: List of major organizations/sects/factions.
+        civilization_level: Technology/Civilization development level (Optional).
+    """
     power_structure: str = Field(description="Power structure (e.g., Feudal Dynasty/Capital Federation)")
     currency_system: List[str] = Field(default=["Gold Coin"], description="Currency system")
     background:List[str]=Field(description="Power structure background, history legends etc. of this social system")
@@ -65,18 +115,40 @@ class SocialSystem(BaseModel):
     civilization_level: Optional[str] = Field(description="Technology/Civilization development level")
 
 class CoreSystem(BaseModel):
+    """
+    Model for Core System.
+
+    Attributes:
+        system_type: System type (Power/Social/Tech/Ability etc.).
+        name: System name (e.g. Douqi/Capital Rules/Court Politics).
+        levels: Level/Class division (Optional).
+        source: Source of Energy/Power (e.g. Reiki/Capital/Imperial Power).
+    """
     system_type: str = Field(description="System type (Power/Social/Tech/Ability etc.)")
     name: str = Field(description="System name (e.g. Douqi/Capital Rules/Court Politics)")
     levels: Optional[List[str]] = Field(None, description="Level/Class division (Optional)")
     source: str = Field(description="Source of Energy/Power (e.g. Reiki/Capital/Imperial Power)")
 
 class SettingItem(BaseModel):
+    """
+    Model for a generic setting item.
+
+    Attributes:
+        title: Setting title.
+        description: Specific description of this setting item.
+    """
     title: str = Field(description="Setting title, e.g.: Geography Cosmology, History Legends, Race Settings etc.")
     description: str = Field(description="Specific description of this setting item")
 
 class WorldviewTemplate(BaseModel):
     """
-    Worldview Template
+    Worldview Template.
+
+    Attributes:
+        world_name: World Name.
+        core_conflict: World core conflict (e.g. Resource Scramble/Racial Hatred).
+        social_system: Social System.
+        power_systems: Core system list.
     """
     world_name: str = Field(min_length=2, description="World Name")
     core_conflict: str = Field(description="World core conflict (e.g. Resource Scramble/Racial Hatred)")
@@ -85,6 +157,13 @@ class WorldviewTemplate(BaseModel):
     # key_settings: Optional[List[SettingItem]] = Field(description="Other key worldview settings (Optional)")
 
 class WorldBuilding(BaseModel):
+    """
+    Request model for World Building.
+
+    Attributes:
+        world_view_thinking: Worldview design thinking process.
+        world_view: The generated Worldview Template.
+    """
     world_view_thinking: str = Field(description="Worldview design thinking process",examples=["Sample output, for learning thinking process only: When designing worldview, I hope to build a framework that is both close to reality and full of sci-fi imagination. First, for reader immersion, I choose to set story background in modern city, so conflict between protagonist's special ability and daily life will have more tension. But modern city alone is not enough to support 'Space-Time Travel' theme, so I introduce 'Dream World' as bridge between reality and future. This dream world is initially a reflection of reality, but with protagonist's intervention, it changes drastically, even appearing 'Old Sea' and 'New Mirage City' differences, adding layers and exploration space to worldview. To explain this change, I need rigorous space-time laws, like 'Space-Time Butterfly Effect', 'Timeline Correction' etc. These laws not only explain interaction between dream and reality, but also provide logical basis for plot advancement and conflict generation. Also to carry 'Civilization Deduction' and 'Otherworld Science Flow' tags, I conceive a hidden organization behind scenes, mastering technology beyond era and deep understanding of space-time laws. Their existence is embodiment of world core conflict - control over historical direction. In social system, real world is modern society, while future dream might present highly developed tech but deformed society (like points supremacy) or apocalyptic wasteland (like radiation disaster), this contrast enhances story depth and warning significance. Core drive system, besides protagonist's dream ability, needs 'Super-Space-Time Particles' scientific concepts as power source and theoretical support, making entire worldview self-consistent and full of exploration potential under sci-fi framework."])
     world_view: WorldviewTemplate
 
@@ -93,6 +172,16 @@ class WorldBuilding(BaseModel):
 
 
 class Blueprint(BaseModel):
+    """
+    Model for Novel Blueprint.
+
+    Attributes:
+        volume_count: Expected number of volumes.
+        character_thinking: Character design thinking process.
+        character_cards: Core character card list.
+        scene_thinking: Scene design thinking process.
+        scene_cards: Main Map/Scene/Dungeon card list.
+    """
     volume_count: int = Field(description="Expected number of volumes, usually 3~6 volumes")
     character_thinking: str = Field(description="Character design thinking process",examples=["Sample output, for learning thinking process only: In designing characters, I uphold 'Diversity and Complementarity' principle, ensuring each core character plays unique role and forms close connection with protagonist group.\n\nFirst is protagonist Wang Xiaoming. As 'Time Traveler', must have modern thinking and adaptability. I set him as Kendo master, allowing fast integration into otherworld and echoing otherworld 'Swordsmanship' system. His core drive is 'High Reward' and 'Protecting Haiwen', transforming him from bystander to participant and guardian. His growth arc will be 'From ordinary person in reality to savior in otherworld', closely linked to 'Evolution Flow' tag.\n\nHeroine Haiwen is story guide. Must be core figure in otherworld, with strong magic talent and unique background. I set her as 'Genius Mage' and 'Royal Marriage Fugitive', providing initial dilemma and motivation. Her 'Flash Marriage' with protagonist quickly establishes CP relationship and lays foundation for emotional development. Her core drive is 'Escape Marriage' and 'Save World', finding balance between personal and world fate. Her character arc is 'From fugitive to Royal Court Mage saving world', showing her growth and responsibility.\n\nHeath as main villain, must be powerful and mysterious. I set her as 'Haiwen's Aunt' and 'Evil Mage', kinship adds complexity and emotional tension. Her core motivation is 'Destroy World', related to curse of lost civilization. Her character arc is 'From genius mage to destroyer, finally choosing to leave', adding tragic color to ending.\n\nLin Xiaoxue acts as bridge to real world, her 'Scholar' setting allows providing modern knowledge to otherworld, reflecting 'Otherworld Science Flow' and 'Civilization Collision' tags.\n\nThrough these character designs, I hope to build a character ensemble full of tension, rich emotion, and jointly driving grand narrative."])
     character_cards: List[CharacterCard] = Field(description="Core character card list, generate core characters with cross-volume long-term influence only here")
@@ -107,12 +196,25 @@ class Blueprint(BaseModel):
 # === Step 4: Volume Outline Schemas===
 
 class CharacterAction(BaseModel):
-    """Character Card, covering various info"""
+    """
+    Character Card, covering various info.
+
+    Attributes:
+        name: Character name.
+        description: Narrate main deeds of this character in this volume from first person perspective.
+    """
     name: Optional[str] = Field(default="", description="Character name")
     description: Optional[str] = Field(default="", description="Narrate main deeds of this character in this volume from first person perspective")
 
 class StoryLine(BaseModel):
-    """Story line info, from primitive_models/Step2Model.py"""
+    """
+    Story line info.
+
+    Attributes:
+        story_type: Story line type (Main/Branch).
+        name: Simple name to represent this line.
+        overview: Story line content overview.
+    """
     story_type: Optional[Literal['主线', '辅线']] = Field(default='主线', description="Story line type (Main/Branch)")
     name: Optional[str] = Field(default="", description="Use a simple name to represent this line")
     overview: Optional[str] = Field(default="", description="Story line content overview, be concise, all involved scenes, characters etc. should be reflected in this overview.")
@@ -120,7 +222,19 @@ class StoryLine(BaseModel):
 
 class VolumeOutline(BaseModel):
     """
-    Core data model for Volume Outline
+    Core data model for Volume Outline.
+
+    Attributes:
+        volume_number: Volume Number.
+        thinking: Thinking process for volume design.
+        main_target: Main line target.
+        branch_line: List of branch lines.
+        character_thinking: Character action thinking.
+        new_character_cards: List of new key characters (optional).
+        new_scene_cards: List of new key scenes (optional).
+        stage_count: Expected number of stages.
+        character_action_list: Key character entity actions and changes.
+        entity_snapshot: Key entity snapshot status info at end of volume.
     """
     volume_number: Optional[int] = Field(default=1, description="Volume Number")
     thinking: Optional[str] = Field(default="", description="Based on provided worldview, characters, maps/dungeons, think how to unfold this volume, what main/branch lines to design? How to drive plot development?",examples=["Sample output, for learning thinking process only: As opening volume, my core thinking is how to quickly establish protagonist's 'Infinite Resurrection' cheat feature, combine it with cruel otherworld background, create strong survival pressure, driving protagonist to rise from desperation. I need to design a progressive growth path, let protagonist start from dying person, accumulate experience and knowledge through each resurrection, gradually adapt to environment, finally stand firm in City A, accumulate primitive capital, establish initial power. Meanwhile for subsequent grand narrative, must bury worldview foreshadowing in this volume, e.g. social solidification, higher civilization manipulation, revealed gradually through protagonist view. In character building, introduce group of partners with different personalities, they are protagonist's help and contrast protagonist's strength and uniqueness. In terms of satisfaction points, protagonist using cheat 'foreknowledge' advantage to achieve dimensional strike in stock market and adventure, and final revenge on early villains, will be important design points."])
@@ -137,12 +251,26 @@ class VolumeOutline(BaseModel):
 class WritingGuide(BaseModel):
     """
     Writing Guide, used to guide AI on details to pay attention to when writing in specific volume.
+
+    Attributes:
+        volume_number: Volume number.
+        content: Specific content to guide writing.
     """
     volume_number: int = Field(description="Volume number corresponding to this writing guide")
     content: str = Field(description="Specific content generated by AI based on methodology to guide writing of this volume. Word count controlled within 1000 words.",min_length=100)
 
 class ChapterOutline(BaseModel):
-    """Chapter Outline"""
+    """
+    Chapter Outline.
+
+    Attributes:
+        volume_number: Volume number.
+        stage_number: Stage number.
+        title: Chapter Title.
+        chapter_number: Chapter Number.
+        overview: Chapter main content overview.
+        entity_list: List of important entities appearing in chapter.
+    """
     volume_number: Optional[int] = Field(default=0, description="Volume number, if not found, set to 0")
     stage_number:Optional[int]=Field(default=1,description="Which stage this chapter belongs to, starting from 1")
     title: Optional[str] = Field(default="", description="Chapter Title")
@@ -157,7 +285,19 @@ class ChapterOutline(BaseModel):
     
 
 class StageLine(BaseModel):
-    """Story info divided by stage"""
+    """
+    Story info divided by stage.
+
+    Attributes:
+        volume_number: Volume number.
+        stage_number: Stage number.
+        stage_name: Brief summary name.
+        reference_chapter: Start and end chapter numbers (Tuple).
+        analysis: Author's thinking analysis.
+        overview: Concrete overview of stage plot content.
+        chapter_outline_list: Generated chapter outlines.
+        entity_snapshot: Key entity snapshot status info at end of stage.
+    """
     volume_number:int=Field(default=1,description="Which volume this story stage belongs to")
     stage_number:int=Field(default=1,description="Which stage this story stage is, starting from 1")
     stage_name: Optional[str] = Field(default="", description="Use a name or sentence to briefly summarize this stage")
@@ -171,6 +311,17 @@ class StageLine(BaseModel):
 # === Step 6: Batch Chapter Outline Schemas===
 
 class Chapter(BaseModel):
+    """
+    Model for a Chapter (Content and Metadata).
+
+    Attributes:
+        volume_number: Volume number.
+        stage_number: Stage number.
+        title: Chapter Title.
+        chapter_number: Chapter Number.
+        entity_list: List of important entities.
+        content: Chapter text content.
+    """
     volume_number: Optional[int] = Field(default=0, description="Volume number, if not found, set to 0")
     stage_number:Optional[int]=Field(default=1,description="Which stage this chapter belongs to, starting from 1")
     title: Optional[str] = Field(default="", description="Chapter Title")
@@ -181,5 +332,3 @@ class Chapter(BaseModel):
         description="List of important entities participating in chapter, must be selected from provided entities; name must be pure name (no brackets/remarks)",
     )
     content:Optional[str]=Field(default="",description="Chapter text content")
-    
-

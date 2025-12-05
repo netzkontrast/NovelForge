@@ -26,15 +26,17 @@ def search_cards(
     Search cards in the project
     
     Args:
-        card_type: Card type name (Optional)
-        title_keyword: Title keyword (Optional)
-        limit: Max number of results
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_type: Card type name (Optional).
+        title_keyword: Title keyword (Optional).
+        limit: Max number of results (default 10).
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message
-        cards: List of cards
-        count: Number of cards
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message (if applicable).
+        - cards: List of found cards (id, title, type).
+        - count: Number of cards found.
     """
     logger.info(f" [PydanticAI.search_cards] card_type={card_type}, keyword={title_keyword}")
     
@@ -83,23 +85,25 @@ def create_card(
         create_card(card_type="Chapter Outline", title="Chapter 1", content={...}, parent_card_id=42)
     
     Args:
-        card_type: Card type name (e.g. Character Card, Chapter Outline, Worldview Setting etc.)
-        title: Card title
-        content: Card content (Dictionary, must conform to the type's Schema)
-        parent_card_id: Parent card ID (Optional)
-            * If provided, create sub-card under specified card
-            * If not provided, create in project root
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_type: Card type name (e.g. Character Card, Chapter Outline, Worldview Setting etc.).
+        title: Card title.
+        content: Card content (Dictionary, must conform to the type's Schema).
+        parent_card_id: Parent card ID (Optional).
+            * If provided, create sub-card under specified card.
+            * If not provided, create in project root.
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message (if failed)
-        card_id: Card ID
-        card_title: Card Title
-        card_type: Card Type
-        parent_id: Parent Card ID (None means created in root)
-        parent_title: Parent Card Title (If parent exists)
-        parent_type: Parent Card Type (If parent exists)
-        message: User friendly message
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message (if failed).
+        - card_id: Card ID.
+        - card_title: Card Title.
+        - card_type: Card Type.
+        - parent_id: Parent Card ID (None means created in root).
+        - parent_title: Parent Card Title (If parent exists).
+        - parent_type: Parent Card Type (If parent exists).
+        - message: User friendly message.
     """
     
     logger.info(f" [PydanticAI.create_card] type={card_type}, title={title}, parent_id={parent_card_id}")
@@ -172,22 +176,22 @@ def modify_card_field(
         - modify_card_field(card_id=8, field_path="chapter_outline_list", new_value=[...])
     
     Args:
-        card_id: Target card ID (Find from project structure tree)
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_id: Target card ID (Find from project structure tree).
         field_path: Field path, supports two formats:
             * Simple field: "overview", "stage_name" etc.
             * Nested field: "content.overview", "content.chapter_outline_list" etc.
-        new_value: New value to set (Can be string, number, list, dict etc.)
-    
-    
+        new_value: New value to set (Can be string, number, list, dict etc.).
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message
-        card_id: Card ID
-        card_title: Card Title
-        field_path: Field Path
-        new_value: New Value
-        message: User friendly message
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message.
+        - card_id: Card ID.
+        - card_title: Card Title.
+        - field_path: Field Path.
+        - new_value: New Value.
+        - message: User friendly message.
     """
     logger.info(f" [PydanticAI.modify_card_field] card_id={card_id}, path={field_path}")
     logger.info(f"  New value type: {type(new_value)}")
@@ -257,17 +261,19 @@ def batch_create_cards(
     Batch create cards of same type
     
     Args:
-        card_type: Card type name
-        cards: List of card data, each item contains title and content
-        parent_card_id: Parent card ID (Optional)
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_type: Card type name.
+        cards: List of card data, each item contains title and content.
+        parent_card_id: Parent card ID (Optional).
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message
-        total: Total cards
-        success_count: Number of successfully created cards
-        failed_count: Number of failed cards
-        results: Creation result list
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message.
+        - total: Total cards.
+        - success_count: Number of successfully created cards.
+        - failed_count: Number of failed cards.
+        - results: Creation result list.
     """
     logger.info(f" [PydanticAI.batch_create_cards] type={card_type}, count={len(cards)}")
     
@@ -315,14 +321,16 @@ def get_card_type_schema(
     Use case: Call when need to create card but unsure of its structure
     
     Args:
-        card_type_name: Card type name
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_type_name: Card type name.
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message
-        card_type: Card type name
-        schema: JSON Schema definition of card type
-        description: Description of card type
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message.
+        - card_type: Card type name.
+        - schema: JSON Schema definition of card type.
+        - description: Description of card type.
     """
     logger.info(f" [PydanticAI.get_card_type_schema] card_type={card_type_name}")
     
@@ -358,19 +366,21 @@ def get_card_content(
     Use case: Call when need to view full data of a card
     
     Args:
-        card_id: Card ID
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_id: Card ID.
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message (if failed)
-        card_id: Card ID
-        title: Card Title
-        card_type: Card Type
-        parent_id: Parent Card ID (None means root card)
-        parent_title: Parent Card Title (If parent exists)
-        parent_type: Parent Card Type (If parent exists)
-        content: Card Content
-        created_at: Card Creation Time
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message (if failed).
+        - card_id: Card ID.
+        - title: Card Title.
+        - card_type: Card Type.
+        - parent_id: Parent Card ID (None means root card).
+        - parent_title: Parent Card Title (If parent exists).
+        - parent_type: Parent Card Type (If parent exists).
+        - content: Card Content.
+        - created_at: Card Creation Time.
     """
     logger.info(f" [PydanticAI.get_card_content] card_id={card_id}")
     
@@ -427,21 +437,21 @@ def replace_field_text(
                             new_text="New complete paragraph content...")
     
     Args:
-        card_id: Target card ID
-        field_path: Field path (e.g. "content" for chapter body, "overview" for outline)
+        ctx: Pydantic AI RunContext containing AssistantDeps.
+        card_id: Target card ID.
+        field_path: Field path (e.g. "content" for chapter body, "overview" for outline).
         old_text: Original text fragment to replace, supports two modes:
-            1. Exact match: Provide complete original text (Suitable for short text, < 50 chars)
-            2. Fuzzy match: Provide start 10 chars + "..." + end 10 chars (Suitable for long text, > 50 chars)
-        new_text: New text content
-    
-    
+            1. Exact match: Provide complete original text (Suitable for short text, < 50 chars).
+            2. Fuzzy match: Provide start 10 chars + "..." + end 10 chars (Suitable for long text, > 50 chars).
+        new_text: New text content.
     
     Returns:
-        success: True if successful, False otherwise
-        error: Error message
-        card_title: Card Title
-        replaced_count: Number of replacements
-        message: User friendly message
+        A dictionary containing:
+        - success: True if successful, False otherwise.
+        - error: Error message.
+        - card_title: Card Title.
+        - replaced_count: Number of replacements.
+        - message: User friendly message.
     """
     logger.info(f" [PydanticAI.replace_field_text] card_id={card_id}, path={field_path}")
     logger.info(f"  Text length to replace: {len(old_text)} chars")
@@ -520,6 +530,16 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 tools_schema=None
 
 def _get_tools_json_schema(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+    """
+    Internal helper to get tool schema.
+
+    Args:
+        messages: List of model messages.
+        info: Agent info containing function tools.
+
+    Returns:
+        ModelResponse containing the JSON schema of tools.
+    """
     tools=[]
     for tool in info.function_tools:
         tools.append({
@@ -530,7 +550,12 @@ def _get_tools_json_schema(messages: list[ModelMessage], info: AgentInfo) -> Mod
     return ModelResponse(parts=[TextPart(json.dumps(tools,ensure_ascii=False))])
 
 async def get_tools_schema():
-    """Asynchronously get tool schema"""
+    """
+    Asynchronously get tool schema.
+
+    Returns:
+        List of tool schemas in JSON format.
+    """
     global tools_schema
     if tools_schema is None:
         agent = Agent(tools=ASSISTANT_TOOLS)
@@ -539,8 +564,3 @@ async def get_tools_schema():
         tools_schema = json.loads(result.output)
     
     return tools_schema
-
-
-
-
-    

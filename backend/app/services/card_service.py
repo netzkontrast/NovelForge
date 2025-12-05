@@ -30,6 +30,7 @@ WEIGHT_THRESHOLD =0.45
 # ---- : Subtree Tools ----
 
 def _fetch_children(db: Session, parent_ids: List[int]) -> List[Card]:
+    """Fetch immediate children of given parent IDs."""
     if not parent_ids:
         return []
     stmt = select(Card).where(Card.parent_id.in_(parent_ids))
@@ -49,12 +50,14 @@ def _collect_subtree(db: Session, root: Card) -> List[Card]:
 
 
 def _next_display_order(db: Session, project_id: int, parent_id: Optional[int]) -> int:
+    """Calculate the next display order for a new card under a parent."""
     stmt = select(Card).where(Card.project_id == project_id, Card.parent_id == parent_id)
     siblings = db.exec(stmt).all()
     return len(siblings)
 
 
 def _shallow_clone(src: Card, project_id: int, parent_id: Optional[int], display_order: int) -> Card:
+    """Create a shallow copy of a card."""
     return Card(
         title=src.title,
         model_name=src.model_name,
@@ -71,6 +74,7 @@ def _shallow_clone(src: Card, project_id: int, parent_id: Optional[int], display
 # ---- Title Suffix Generation ----
 
 def _generate_non_conflicting_title(db: Session, project_id: int, base_title: str) -> str:
+    """Generate a unique title by appending a number suffix if necessary."""
     title = (base_title or '').strip() or 'New Card'
     # Collect all titles starting with base_title and form base_title(number) in same project
     stmt = select(Card.title).where(Card.project_id == project_id)
@@ -99,6 +103,15 @@ class CardService:
         self.db = db
 
     def get_all_for_project(self, project_id: int) -> List[Card]:
+        """
+        Get all cards for a project.
+
+        Args:
+            project_id: Project ID.
+
+        Returns:
+            List of cards sorted by display order.
+        """
         # Get all cards for project, tree structure will be built on client.
         statement = (
             select(Card)
@@ -109,9 +122,31 @@ class CardService:
         return cards
 
     def get_by_id(self, card_id: int) -> Optional[Card]:
+        """
+        Get a card by ID.
+
+        Args:
+            card_id: Card ID.
+
+        Returns:
+            Card object or None if not found.
+        """
         return self.db.get(Card, card_id)
 
     def create(self, card_create: CardCreate, project_id: int) -> Card:
+        """
+        Create a new card.
+
+        Args:
+            card_create: Card creation data.
+            project_id: Project ID.
+
+        Returns:
+            Created Card object.
+
+        Raises:
+            HTTPException: If card type not found or singleton constraint violated.
+        """
 
         card_type = self.db.get(CardType, card_create.card_type_id)
         if not card_type:
@@ -159,9 +194,14 @@ class CardService:
     @staticmethod
     def create_initial_cards_for_project(db: Session, project_id: int, template_items: Optional[List[dict]] = None):
         """
-        # Create initial card set for new project.
-        # If template_items provided, use them; otherwise fallback to built-in default list (backward compatibility).
-        # template_items: List[ { card_type_id: int, display_order: int, title_override?: str } ]
+        Create initial card set for new project.
+
+        Args:
+            db: Database session.
+            project_id: Project ID.
+            template_items: Optional list of template items defining initial cards.
+                            Format: List[ { card_type_id: int, display_order: int, title_override?: str } ]
+                            If None, uses built-in default list.
         """
         if template_items is None:
             initial_cards_setup = {
@@ -215,6 +255,16 @@ class CardService:
         return
 
     def update(self, card_id: int, card_update: CardUpdate) -> Optional[Card]:
+        """
+        Update an existing card.
+
+        Args:
+            card_id: ID of the card to update.
+            card_update: Update data.
+
+        Returns:
+            Updated Card object or None if not found.
+        """
         card = self.get_by_id(card_id)
         if not card:
             return None
@@ -238,6 +288,15 @@ class CardService:
         return card
 
     def delete(self, card_id: int) -> bool:
+        """
+        Delete a card.
+
+        Args:
+            card_id: ID of the card to delete.
+
+        Returns:
+            True if deleted, False if not found.
+        """
         # Recursive delete handled by cascade option in relationship
         card = self.get_by_id(card_id)
         if not card:
@@ -248,6 +307,20 @@ class CardService:
 
     # ---- Move and Copy ----
     def move_card(self, card_id: int, target_project_id: int, parent_id: Optional[int] = None) -> Optional[Card]:
+        """
+        Move a card (and its subtree) to another project or parent.
+
+        Args:
+            card_id: ID of the card to move.
+            target_project_id: ID of the target project.
+            parent_id: ID of the new parent card (optional).
+
+        Returns:
+            The moved Card object.
+
+        Raises:
+            HTTPException: If invalid move operation (cycle, not found, singleton conflict).
+        """
         root = self.get_by_id(card_id)
         if not root:
             return None
@@ -288,6 +361,20 @@ class CardService:
         return root
 
     def copy_card(self, card_id: int, target_project_id: int, parent_id: Optional[int] = None) -> Optional[Card]:
+        """
+        Copy a card (and its subtree) to another project or parent.
+
+        Args:
+            card_id: ID of the card to copy.
+            target_project_id: ID of the target project.
+            parent_id: ID of the new parent card (optional).
+
+        Returns:
+            The new root Card object of the copied subtree.
+
+        Raises:
+            HTTPException: If singleton conflict.
+        """
         src_root = self.get_by_id(card_id)
         if not src_root:
             return None
@@ -328,12 +415,15 @@ class CardTypeService:
         self.db = db
 
     def get_all(self) -> List[CardType]:
+        """Get all card types."""
         return self.db.exec(select(CardType)).all()
 
     def get_by_id(self, card_type_id: int) -> Optional[CardType]:
+        """Get a card type by ID."""
         return self.db.get(CardType, card_type_id)
         
     def create(self, card_type_create: CardTypeCreate) -> CardType:
+        """Create a new card type."""
         card_type = CardType.model_validate(card_type_create)
         self.db.add(card_type)
         self.db.commit()
@@ -341,6 +431,7 @@ class CardTypeService:
         return card_type
 
     def update(self, card_type_id: int, card_type_update: CardTypeUpdate) -> Optional[CardType]:
+        """Update an existing card type."""
         card_type = self.get_by_id(card_type_id)
         if not card_type:
             return None
@@ -352,10 +443,11 @@ class CardTypeService:
         return card_type
 
     def delete(self, card_type_id: int) -> bool:
+        """Delete a card type."""
         card_type = self.get_by_id(card_type_id)
         if not card_type:
             return False
         # Consider cascading deletes or checks for associated cards
         self.db.delete(card_type)
         self.db.commit()
-        return True 
+        return True

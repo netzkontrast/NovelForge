@@ -9,6 +9,8 @@ from app.api.endpoints import workflows as workflows_ep
 from app.api.endpoints import assistant as assistant_ep
 
 api_router = APIRouter()
+
+# Register API routes
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(llm_configs.router, prefix="/llm-configs", tags=["llm-configs"])
 
@@ -21,4 +23,4 @@ api_router.include_router(context_ep.router, prefix="/context", tags=["context"]
 api_router.include_router(memory_ep.router, prefix="/memory", tags=["memory"]) 
 api_router.include_router(foreshadow_ep.router, prefix="/foreshadow", tags=["foreshadow"]) 
 api_router.include_router(knowledge_ep.router, prefix="/knowledge", tags=["knowledge"]) 
-api_router.include_router(workflows_ep.router, tags=["workflows"]) 
+api_router.include_router(workflows_ep.router, tags=["workflows"])

@@ -13,6 +13,7 @@ router = APIRouter()
 
 @router.post("/", response_model=ApiResponse[LLMConfigRead])
 def create_llm_config_endpoint(config_in: LLMConfigCreate, session: Session = Depends(get_session)):
+    """Create a new LLM configuration."""
     if config_in.display_name is None or config_in.display_name == "":
         config_in.display_name = config_in.model_name
     config = llm_config_service.create_llm_config(session=session, config_in=config_in)
@@ -20,11 +21,13 @@ def create_llm_config_endpoint(config_in: LLMConfigCreate, session: Session = De
 
 @router.get("/", response_model=ApiResponse[List[LLMConfigRead]])
 def get_llm_configs_endpoint(session: Session = Depends(get_session)):
+    """Get all LLM configurations."""
     configs = llm_config_service.get_llm_configs(session=session)
     return ApiResponse(data=configs)
 
 @router.put("/{config_id}", response_model=ApiResponse[LLMConfigRead])
 def update_llm_config_endpoint(config_id: int, config_in: LLMConfigUpdate, session: Session = Depends(get_session)):
+    """Update an existing LLM configuration."""
     config = llm_config_service.update_llm_config(session=session, config_id=config_id, config_in=config_in)
     if not config:
         raise HTTPException(status_code=404, detail="LLM Config not found")
@@ -32,6 +35,7 @@ def update_llm_config_endpoint(config_id: int, config_in: LLMConfigUpdate, sessi
 
 @router.delete("/{config_id}", response_model=ApiResponse)
 def delete_llm_config_endpoint(config_id: int, session: Session = Depends(get_session)):
+    """Delete an LLM configuration."""
     success = llm_config_service.delete_llm_config(session=session, config_id=config_id)
     if not success:
         raise HTTPException(status_code=404, detail="LLM Config not found")
@@ -72,6 +76,7 @@ async def test_llm_connection_endpoint(connection_data: LLMConnectionTest, sessi
 
 @router.post("/{config_id}/reset-usage", response_model=ApiResponse, summary="Reset usage statistics (clear input/output tokens and call count)")
 def reset_llm_usage(config_id: int, session: Session = Depends(get_session)):
+    """Reset usage statistics for an LLM configuration."""
     ok = llm_config_service.reset_usage(session, config_id)
     if not ok:
         raise HTTPException(status_code=404, detail="LLM Config not found")

@@ -6,6 +6,15 @@ from datetime import datetime
 
 
 class Project(SQLModel, table=True):
+    """
+    Model representing a Project.
+
+    Attributes:
+        id: Unique identifier for the project.
+        name: Name of the project.
+        description: Description of the project.
+        cards: List of cards associated with the project.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     description: Optional[str] = None
@@ -15,6 +24,25 @@ class Project(SQLModel, table=True):
 
 
 class LLMConfig(SQLModel, table=True):
+    """
+    Model representing LLM Configuration.
+
+    Attributes:
+        id: Unique identifier.
+        provider: Provider name (e.g. openai).
+        display_name: Display name.
+        model_name: Model name.
+        api_base: API base URL.
+        api_key: API key.
+        base_url: Base URL (optional).
+        token_limit: Token limit (-1 for unlimited).
+        call_limit: Call limit (-1 for unlimited).
+        used_tokens_input: Total input tokens used.
+        used_tokens_output: Total output tokens used.
+        used_calls: Total calls made.
+        rpm_limit: Requests per minute limit.
+        tpm_limit: Tokens per minute limit.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     provider: str = Field(index=True)
     display_name: Optional[str] = None
@@ -55,6 +83,17 @@ class LLMConfig(SQLModel, table=True):
 
 
 class Prompt(SQLModel, table=True):
+    """
+    Model representing a Prompt.
+
+    Attributes:
+        id: Unique identifier.
+        name: Unique name of the prompt.
+        description: Description of the prompt.
+        template: The prompt template string.
+        version: Version number.
+        built_in: Whether the prompt is built-in.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
     description: Optional[str] = None
@@ -65,6 +104,24 @@ class Prompt(SQLModel, table=True):
 
 
 class CardType(SQLModel, table=True):
+    """
+    Model representing a Card Type.
+
+    Attributes:
+        id: Unique identifier.
+        name: Name of the card type.
+        model_name: Model name identifier.
+        description: Description.
+        json_schema: JSON Schema structure.
+        ai_params: Default AI parameters.
+        editor_component: Editor component identifier.
+        is_ai_enabled: Whether AI is enabled.
+        is_singleton: Whether only one instance is allowed per project.
+        built_in: Whether the card type is built-in.
+        default_ai_context_template: Default AI context template.
+        ui_layout: UI layout configuration.
+        cards: List of cards of this type.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     # Compatible with old model names (e.g. CharacterCard/SceneCard), if empty defaults to equal name
@@ -86,6 +143,27 @@ class CardType(SQLModel, table=True):
 
 
 class Card(SQLModel, table=True):
+    """
+    Model representing a Card.
+
+    Attributes:
+        id: Unique identifier.
+        title: Title of the card.
+        model_name: Model name.
+        content: Content JSON.
+        created_at: Creation timestamp.
+        json_schema: Instance-specific JSON Schema.
+        ai_params: Instance-specific AI parameters.
+        parent_id: Parent card ID.
+        parent: Parent card object.
+        children: List of child cards.
+        project_id: Project ID.
+        project: Project object.
+        card_type_id: Card Type ID.
+        card_type: Card Type object.
+        display_order: Display order.
+        ai_context_template: Instance-specific AI context template.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
     # Compatible with old model names; if empty follows type model_name or type name
@@ -127,6 +205,20 @@ class Card(SQLModel, table=True):
 
 # Foreshadowing Registry
 class ForeshadowItem(SQLModel, table=True):
+    """
+    Model representing a Foreshadowing Item.
+
+    Attributes:
+        id: Unique identifier.
+        project_id: Project ID.
+        chapter_id: Chapter ID (optional).
+        title: Title.
+        type: Type (goal/item/person/other).
+        note: Note.
+        status: Status (open/resolved).
+        created_at: Creation timestamp.
+        resolved_at: Resolution timestamp.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     chapter_id: Optional[int] = Field(default=None)  # Chapter card ID or chapter ID
@@ -140,6 +232,16 @@ class ForeshadowItem(SQLModel, table=True):
 
 # Knowledge Base Model
 class Knowledge(SQLModel, table=True):
+    """
+    Model representing a Knowledge Base item.
+
+    Attributes:
+        id: Unique identifier.
+        name: Unique name.
+        description: Description.
+        content: Content.
+        built_in: Whether it is built-in.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
     description: Optional[str] = None
@@ -149,6 +251,23 @@ class Knowledge(SQLModel, table=True):
 
 # Workflow System
 class Workflow(SQLModel, table=True):
+    """
+    Model representing a Workflow.
+
+    Attributes:
+        id: Unique identifier.
+        name: Name.
+        description: Description.
+        version: Version.
+        dsl_version: DSL version.
+        is_built_in: Whether it is built-in.
+        is_active: Whether it is active.
+        definition_json: Definition JSON.
+        created_at: Creation timestamp.
+        updated_at: Update timestamp.
+        triggers: List of associated triggers.
+        runs: List of associated runs.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     description: Optional[str] = None
@@ -170,6 +289,18 @@ class Workflow(SQLModel, table=True):
 
 
 class WorkflowTrigger(SQLModel, table=True):
+    """
+    Model representing a Workflow Trigger.
+
+    Attributes:
+        id: Unique identifier.
+        workflow_id: Workflow ID.
+        workflow: Workflow object.
+        trigger_on: Trigger event.
+        card_type_name: Card type name filter.
+        filter_json: Filter JSON.
+        is_active: Whether it is active.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     workflow_id: int = Field(foreign_key="workflow.id")
     workflow: Workflow = Relationship(back_populates="triggers")
@@ -184,6 +315,24 @@ class WorkflowTrigger(SQLModel, table=True):
 
 
 class WorkflowRun(SQLModel, table=True):
+    """
+    Model representing a Workflow Run.
+
+    Attributes:
+        id: Unique identifier.
+        workflow_id: Workflow ID.
+        workflow: Workflow object.
+        definition_version: Definition version.
+        status: Status (queued/running/succeeded/failed/cancelled/partial).
+        scope_json: Scope JSON.
+        params_json: Params JSON.
+        idempotency_key: Idempotency key.
+        created_at: Creation timestamp.
+        started_at: Start timestamp.
+        finished_at: Finish timestamp.
+        summary_json: Summary JSON.
+        error_json: Error JSON.
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     workflow_id: int = Field(foreign_key="workflow.id")
     workflow: Workflow = Relationship(back_populates="runs")
